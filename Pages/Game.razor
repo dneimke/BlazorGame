@@ -4,7 +4,7 @@
 
 @if (currentSession == null)
 {
-    <h3>Start a new game</h3> 
+    <h3>Start a new game</h3>
 
     <EditForm Model="@startGameModel" OnValidSubmit="@OnEnterGame">
         <DataAnnotationsValidator />
@@ -42,6 +42,7 @@
 else
 {
     <h1>Game Code: @currentSession.PINCode</h1>
+    <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 }
 
 
@@ -55,7 +56,7 @@ else
     {
         var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
-        if(startGameModel.Mode == JoinMode.CreateNew)
+        if (startGameModel.Mode == JoinMode.CreateNew)
         {
             currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
         }
@@ -72,7 +73,13 @@ else
 
     private async Task OnLeaveGame()
     {
-        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+        if(currentSession != null)
+        {
+            var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+            await _sessionService.LeaveGame(connectionId, currentSession.PINCode);
+            startGameModel = new();
+            currentSession = null;
+        }
     }
 
     private async Task OnRefreshGame()
