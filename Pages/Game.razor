@@ -4,30 +4,31 @@
 
 @if (currentSession == null)
 {
-    <h3>Start a new game</h3>
+    <h3>Start a new game</h3> 
 
     <EditForm Model="@startGameModel" OnValidSubmit="@OnEnterGame">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
+        <div class="form-group">
+            <label for="username" class="font-weight-bold mr-2">Game Mode</label>
+            <small id="mode-help" class="form-text text-muted">Start a new game or join an existing one.</small>
+            <InputRadioGroup Name="gameMode" @bind-Value="startGameModel.Mode" class="form-control">
+                <InputRadio Name="gameMode" Value="JoinMode.CreateNew" class="mr-2" />Create New
+                <InputRadio Name="gameMode" Value="JoinMode.JoinExisting" class="mx-2" />Join Existing<br>
+            </InputRadioGroup>
+        </div>
+
+        <hr />
+
         <div class="form-row align-items-center">
-            <div class="col">
-                <label for="username">Game Mode</label>
-
-                <InputRadioGroup Name="gameMode" @bind-Value="startGameModel.Mode">
-                    <InputRadio Name="gameMode" Value="JoinMode.CreateNew" />Create New<br>
-                    <InputRadio Name="gameMode" Value="JoinMode.JoinExisting" />Join Existing<br>
-                </InputRadioGroup>
-
-                <small id="mode-help" class="form-text text-muted">Start a new game or join an existing one.</small>
-            </div>
             <div class="col-auto">
-                <label for="username">Username</label>
+                <label for="username" class="font-weight-bold mr-2">Username</label>
                 <input type="text" class="form-control" id="username-input" aria-describedby="username-help" @bind-value="startGameModel.Username">
                 <small id="username-help" class="form-text text-muted">Enter a short username.</small>
             </div>
             <div class="col-auto">
-                <label for="pin-input">PIN</label>
+                <label for="pin-input" class="font-weight-bold mr-2">PIN</label>
                 <input type="number" class="form-control" id="pin-input" aria-describedby="pin-help" maxlength="4" @bind-value="startGameModel.PINCode">
                 <small id="pin-help" class="form-text text-muted">Enter a 4-digit PIN code for this game.</small>
             </div>
