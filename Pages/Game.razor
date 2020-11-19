@@ -1,0 +1,91 @@
+﻿@page "/"
+@inject BlazorGame.Data.GameSessionService _sessionService
+@inject IJSRuntime JS
+
+@if (currentSession == null)
+{
+    <h3>Start a new game</h3>
+
+    <EditForm Model="@startGameModel" OnValidSubmit="@OnEnterGame">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-row align-items-center">
+            <div class="col">
+                <label for="username">Game Mode</label>
+
+                <InputRadioGroup Name="gameMode" @bind-Value="startGameModel.Mode">
+                    <InputRadio Name="gameMode" Value="JoinMode.CreateNew" />Create New<br>
+                    <InputRadio Name="gameMode" Value="JoinMode.JoinExisting" />Join Existing<br>
+                </InputRadioGroup>
+
+                <small id="mode-help" class="form-text text-muted">Start a new game or join an existing one.</small>
+            </div>
+            <div class="col-auto">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username-input" aria-describedby="username-help" @bind-value="startGameModel.Username">
+                <small id="username-help" class="form-text text-muted">Enter a short username.</small>
+            </div>
+            <div class="col-auto">
+                <label for="pin-input">PIN</label>
+                <input type="number" class="form-control" id="pin-input" aria-describedby="pin-help" maxlength="4" @bind-value="startGameModel.PINCode">
+                <small id="pin-help" class="form-text text-muted">Enter a 4-digit PIN code for this game.</small>
+            </div>
+            <div class="col-auto">
+                <button type="submit" id="join-button" class="btn btn-primary mb-2">Go!</button>
+            </div>
+        </div>
+    </EditForm>
+
+}
+else
+{
+    <h1>Game Code: @currentSession.PINCode</h1>
+}
+
+
+
+
+@code {
+    StartGameModel startGameModel = new();
+    CurrentSessionModel? currentSession = null;
+
+    private async Task OnEnterGame()
+    {
+        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+
+        if(startGameModel.Mode == JoinMode.CreateNew)
+        {
+            currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+        }
+        else
+        {
+            currentSession = await _sessionService.JoinGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+        }
+
+        if (currentSession != null)
+        {
+            startGameModel = new();
+        }
+    }
+
+    private async Task OnLeaveGame()
+    {
+        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+    }
+
+    private async Task OnRefreshGame()
+    {
+        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("StartTimer");
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
