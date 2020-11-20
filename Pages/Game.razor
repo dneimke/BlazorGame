@@ -41,7 +41,7 @@
 }
 else
 {
-    <h1>Game Code: @currentSession.PINCode</h1>
+    <h1>Game Code: @currentSession.PinCode</h1>
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 }
 
@@ -50,7 +50,7 @@ else
 
 @code {
     StartGameModel startGameModel = new();
-    CurrentSessionModel? currentSession = null;
+    PlayerSessionModel? currentSession = null;
 
     private async Task OnEnterGame()
     {
@@ -76,7 +76,7 @@ else
         if(currentSession != null)
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-            await _sessionService.LeaveGame(connectionId, currentSession.PINCode);
+            await _sessionService.LeaveGame(connectionId, currentSession.PinCode);
             startGameModel = new();
             currentSession = null;
         }

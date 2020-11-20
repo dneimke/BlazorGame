@@ -43,7 +43,7 @@ namespace BlazorGame
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<SessionHub>("/sessionHub");
+                endpoints.MapHub<GameHub>("/gameHub");
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
