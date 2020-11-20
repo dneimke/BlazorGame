@@ -17,6 +17,54 @@ namespace BlazorGame.Data
 
         public GameSessionService(IHubContext<GameHub> hubContext) => _hubContext = hubContext;
 
+        public async Task RequestGameState(string userId, int pinCode)
+        {
+            // Crude implementation assumes unique PINCode
+            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
+            if (item.Key == Guid.Empty)
+            {
+                return;
+            }
+
+            var game = item.Value;
+
+            await _hubContext.Clients.Group(game.Id.ToString())
+                .SendAsync("GameState", new DealtCardsModel
+                {
+                    GameSessionId = game.Id,
+                    CanDealCards = game.CanDealCards,
+                    Hands = game.Players.Select(x => new CardHand { 
+                        UserId = x.UserId, 
+                        Cards = x.Hand 
+                    }).ToList()
+                });
+        }
+
+        public async Task DealCards(string userId, int pinCode)
+        {
+            // Crude implementation assumes unique PINCode
+            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
+            if (item.Key == Guid.Empty)
+            {
+                return;
+            }
+
+            var game = item.Value;
+            game.DealCards();
+
+            await _hubContext.Clients.Group(game.Id.ToString())
+                .SendAsync("GameState", new DealtCardsModel
+                {
+                    GameSessionId = game.Id,
+                    CanDealCards = game.CanDealCards,
+                    Hands = game.Players.Select(x => new CardHand
+                    {
+                        UserId = x.UserId,
+                        Cards = x.Hand
+                    }).ToList()
+                });
+        }
+
         public async Task<List<Player>> GetPlayers(int pinCode)
         {
             // Crude implementation assumes unique PINCode

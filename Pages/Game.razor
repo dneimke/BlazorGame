@@ -43,19 +43,35 @@ else
 {
     <h1>Game Code: @currentSession.PinCode</h1>
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
+    
     <button type="button" id="refresh-button" style="display: none" @onclick="OnRefreshGame"></button>
 
     if (currentPlayers.Any())
     {
         <h3>Players</h3>
-        <ul>
-            @foreach (var player in currentPlayers)
-            {
-                <li>@player.Name</li>
-            }
-        </ul>
+        <table class="table table-sm">
+            <thead>
+                <tr class="row">
+                    <th scope="col" class="col-sm-4">Player</th>
+                    <th scope="col" class="col-sm-8">Hand</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in currentPlayers)
+                {
+                    <tr class="row">
+                        <th scope="row" class="col-sm-4">@player.Name</th>
+                        <td class="col-sm-8">
+                            <ul class="list-inline" id="hand_@player.UserId"></ul>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
 }
+
+<button type="button" id="deal-button" style="display: none" class="mt-5 btn btn-info">Deal</button>
 
 @code {
     StartGameModel startGameModel = new();
@@ -66,18 +82,24 @@ else
     {
         var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
-        if (startGameModel.Mode == JoinMode.CreateNew)
+        try
         {
-            currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+            if (startGameModel.Mode == JoinMode.CreateNew)
+            {
+                currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+            }
+            else
+            {
+                currentSession = await _sessionService.JoinGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+            }
+
         }
-        else
-        {
-            currentSession = await _sessionService.JoinGame(connectionId, startGameModel.Username, startGameModel.PINCode);
-        }
+        catch { }
 
         if (currentSession != null)
         {
             currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
+            await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession);
             startGameModel = new();
         }
     }

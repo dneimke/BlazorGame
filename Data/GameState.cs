@@ -21,7 +21,10 @@ namespace BlazorGame.Data
     public class Game
     {
         List<string> _animals = new() { Animals.Monkey, Animals.Panda, Animals.Spider, Animals.Tiger };
-        List<Player> _players = new();
+        List<string> _colors = new() { "primary", "secondary", "danger", "warning" };
+        List<string> _icons = new() { "🐵", "🐼", "🕷", "🐯" };
+
+        List <Player> _players = new();
         List<Card> _cards = new();
 
         bool _hasDealtCards = false;
@@ -30,7 +33,14 @@ namespace BlazorGame.Data
         public List<Player> Players { get => _players; }
         public Guid Id { get; }
         public int PinCode { get; }
-        private Player? _creator;
+        public bool CanDealCards { 
+            get
+            {
+                return !_hasDealtCards;
+            }
+        }
+
+        private readonly Player? _creator;
         private GameStatus _state = GameStatus.Complete;
 
         public Game(int pinCode, Player creator)
@@ -45,7 +55,13 @@ namespace BlazorGame.Data
 
         private List<Card> BuildDeck()
         {
-            return _animals.SelectMany(x => Enumerable.Repeat(new Card(x), 2)).ToList();
+            var list = new List<Card>();
+            for(var i = 0; i < _animals.Count; i++)
+            {
+                list.Add(new Card(_animals[i], _colors[i], _icons[i]));
+                list.Add(new Card(_animals[i], _colors[i], _icons[i]));
+            }
+            return list;
         }
 
         public void DealCards()
@@ -111,12 +127,16 @@ namespace BlazorGame.Data
 
     public class Card
     {
-        public Card(string name)
+        public Card(string name, string color, string icon)
         {
             Name = name;
+            Color = color;
+            Icon = icon;
         }
 
         public string Name { get; }
+        public string Color { get; }
+        public string Icon { get; }
     }
 
     public class Player

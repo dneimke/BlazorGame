@@ -28,6 +28,7 @@ namespace BlazorGame.Models
     public class DealtCardsModel
     {
         public Guid GameSessionId { get; set; }
+        public bool CanDealCards { get; set; }
         public List<CardHand> Hands { get; set; } = new();
     }
 }
