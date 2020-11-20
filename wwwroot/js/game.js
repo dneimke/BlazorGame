@@ -1,7 +1,5 @@
 ﻿
 class Game {
-    aspects = ['Vision', 'Product Ownership', 'Definition of Done', 'Velocity'];
-    sentiments = ['Positive', 'Negative'];
     _hasChanges = false;
     _context;
     _dealButton = null;
