@@ -13,5 +13,6 @@ namespace BlazorGame.Hubs
         public async Task CreateGame(string userName, int pinCode) => await _gameService.CreateGame(Context.ConnectionId, userName, pinCode);
         public async Task JoinGame(string userName, int pinCode) => await _gameService.JoinGame(Context.ConnectionId, userName, pinCode);
         public async Task LeaveGame(int pinCode) => await _gameService.LeaveGame(Context.ConnectionId, pinCode);
+        public async Task DealCards(int pinCode) => await _gameService.LeaveGame(Context.ConnectionId, pinCode);
     }
 }

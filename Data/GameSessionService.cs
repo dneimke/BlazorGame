@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace BlazorGame.Data
@@ -14,14 +13,28 @@ namespace BlazorGame.Data
         private readonly IHubContext<GameHub> _hubContext;
         
         // adding by PIN Code for now
-        private Dictionary<Guid, GameState> _currentGames = new();
+        private Dictionary<Guid, Game> _currentGames = new();
 
         public GameSessionService(IHubContext<GameHub> hubContext) => _hubContext = hubContext;
+
+        public async Task<List<Player>> GetPlayers(int pinCode)
+        {
+            // Crude implementation assumes unique PINCode
+            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
+            if (item.Key == Guid.Empty)
+            {
+                return new();
+            }
+
+            var game = item.Value;
+
+            return await Task.FromResult(game.Players);
+        }
 
         public async Task<GameCreatedModel> CreateGame(string userId, string userName, int pinCode)
         {
             var player = new Player(userId, userName);
-            var game = new GameState(pinCode, player);
+            var game = new Game(pinCode, player);
 
             var session = new GameCreatedModel
             {
@@ -85,7 +98,26 @@ namespace BlazorGame.Data
 
             await _hubContext.Groups.RemoveFromGroupAsync(userId, game.Id.ToString());
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("PlayerRetired", $"{userId} has left the game {pinCode}.");
+                .SendAsync("PlayerRetired", new { UserId = userId });
+        }
+
+        public async Task DealCards(int pinCode)
+        {
+            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
+            if (item.Key == Guid.Empty)
+            {
+                return;
+            }
+
+            var game = item.Value;
+            game.DealCards();
+
+            await _hubContext.Clients.Group(game.Id.ToString())
+                .SendAsync("CardsDealt", new DealtCardsModel
+                {
+                    GameSessionId = game.Id,
+                    Hands = game.Players.Select(x => new CardHand { UserId = x.UserId, Cards = x.Hand }).ToList()
+                });
         }
     }
 }

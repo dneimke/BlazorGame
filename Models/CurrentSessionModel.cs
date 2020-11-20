@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BlazorGame.Data;
+using System;
+using System.Collections.Generic;
 
 namespace BlazorGame.Models
 {
@@ -21,5 +23,11 @@ namespace BlazorGame.Models
     public class PlayerJoinedModel : PlayerSessionModel
     {
 
+    }
+
+    public class DealtCardsModel
+    {
+        public Guid GameSessionId { get; set; }
+        public List<CardHand> Hands { get; set; } = new();
     }
 }

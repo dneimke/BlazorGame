@@ -1,5 +1,4 @@
-﻿using BlazorGame.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +18,7 @@ namespace BlazorGame.Data
         Complete
     }
 
-    public class GameState
+    public class Game
     {
         List<string> _animals = new() { Animals.Monkey, Animals.Panda, Animals.Spider, Animals.Tiger };
         List<Player> _players = new();
@@ -34,7 +33,7 @@ namespace BlazorGame.Data
         private Player? _creator;
         private GameStatus _state = GameStatus.Complete;
 
-        public GameState(int pinCode, Player creator)
+        public Game(int pinCode, Player creator)
         {
             Id = Guid.NewGuid();
             PinCode = pinCode;
@@ -75,7 +74,7 @@ namespace BlazorGame.Data
         }
 
 
-        public GameState AddPlayer(Player player)
+        public Game AddPlayer(Player player)
         {
             if (_players.Any(x => x.UserId == player.UserId))
                 throw new InvalidOperationException("Player has already joined the game");
@@ -122,7 +121,7 @@ namespace BlazorGame.Data
 
     public class Player
     {
-        GameState? _game;
+        Game? _game;
         List<Card> _hand = new();
 
         public Player(string userId, string name)
@@ -137,7 +136,7 @@ namespace BlazorGame.Data
 
         public List<Card> Hand { get => _hand; }
 
-        public void Join(GameState game)
+        public void Join(Game game)
         {
             _game = game.AddPlayer(this);
         }
