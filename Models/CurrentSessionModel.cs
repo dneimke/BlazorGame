@@ -6,29 +6,16 @@ namespace BlazorGame.Models
 {
     public enum GameRole { Creator = 1, Player = 2 };
     
-    public class PlayerSessionModel
+    public record PlayerSessionModel
     {
-        public Guid GameSessionId { get; set; }
-        public string UserId { get; set; } = "";
-        public string Username { get; set; } = "";
-        public int PinCode { get; set; }
-        public GameRole Role { get; set; }
+        public Guid GameSessionId { get; init; }
+        public string UserId { get; init; } = "";
+        public string Username { get; init; } = "";
+        public int PinCode { get; init; }
+        public GameRole Role { get; init; }
     }
 
-    public class GameCreatedModel : PlayerSessionModel
-    {
-       
-    }
-
-    public class PlayerJoinedModel : PlayerSessionModel
-    {
-
-    }
-
-    public class DealtCardsModel
-    {
-        public Guid GameSessionId { get; set; }
-        public bool CanDealCards { get; set; }
-        public List<CardHand> Hands { get; set; } = new();
-    }
+    public record GameCreatedModel : PlayerSessionModel;
+    public record PlayerJoinedModel : PlayerSessionModel;
+    public record DealtCardsModel(Guid GameSessionId, bool CanDealCards, List<CardHand> Hands);
 }

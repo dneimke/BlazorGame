@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlazorGame.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,6 +41,22 @@ namespace BlazorGame.Data
             }
         }
 
+        public List<CardHand> Hands => Players.Select(x => new CardHand
+        {
+            UserId = x.UserId,
+            Cards = x.Hand
+        }).ToList();
+
+
+        public List<CardHand> GetHandByPlayer(string userId)
+        {
+            return Players.Where(x => x.UserId == userId).Select(x => new CardHand
+            {
+                UserId = x.UserId,
+                Cards = x.Hand
+            }).ToList();
+        }
+
         private readonly Player? _creator;
         private GameStatus _state = GameStatus.Complete;
 
@@ -58,14 +75,20 @@ namespace BlazorGame.Data
             var list = new List<Card>();
             for(var i = 0; i < _animals.Count; i++)
             {
-                list.Add(new Card(_animals[i], _colors[i], _icons[i]));
-                list.Add(new Card(_animals[i], _colors[i], _icons[i]));
+                list.Add(new(_animals[i], _colors[i], _icons[i]));
+                list.Add(new(_animals[i], _colors[i], _icons[i]));
             }
             return list;
         }
 
         public void DealCards()
         {
+            if(!_players.Any())
+            {
+                _hasDealtCards = false;
+                return;
+            }
+
             if (_hasDealtCards)
                 throw new InvalidOperationException("Cards have been dealt");
 
@@ -74,19 +97,16 @@ namespace BlazorGame.Data
                 throw new InvalidOperationException("Game is closed");
             }
 
+            _players.ForEach(p => p.Hand.Clear());
             int i = 0;
-           
+
             Shuffle().ForEach((card) => {
-                if(_players.Any())
-                {
-                    var p = i % _players.Count;
-                    _players[p].Hand.Add(card);
-                    i++;
-                }
+                var p = i % _players.Count;
+                _players[p].Hand.Add(card);
+                i++;
             });
 
-            if (_players.Any())
-                _hasDealtCards = true;
+            _hasDealtCards = true;
         }
 
 
@@ -125,34 +145,21 @@ namespace BlazorGame.Data
         }
     }
 
-    public class Card
-    {
-        public Card(string name, string color, string icon)
-        {
-            Name = name;
-            Color = color;
-            Icon = icon;
-        }
-
-        public string Name { get; }
-        public string Color { get; }
-        public string Icon { get; }
-    }
+    public record Card(string Name, string Color, string Icon);
 
     public class Player
     {
         Game? _game;
-        List<Card> _hand = new();
+        readonly List<Card> _hand = new();
+
+        public string Name { get; init; }
+        public string UserId { get; init; }
 
         public Player(string userId, string name)
         {
-            Name = name;
             UserId = userId;
+            Name = name;
         }
-
-        
-        public string Name { get; }
-        public string UserId { get; }
 
         public List<Card> Hand { get => _hand; }
 

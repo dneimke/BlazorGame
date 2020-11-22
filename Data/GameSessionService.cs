@@ -29,40 +29,7 @@ namespace BlazorGame.Data
             var game = item.Value;
 
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameState", new DealtCardsModel
-                {
-                    GameSessionId = game.Id,
-                    CanDealCards = game.CanDealCards,
-                    Hands = game.Players.Select(x => new CardHand { 
-                        UserId = x.UserId, 
-                        Cards = x.Hand 
-                    }).ToList()
-                });
-        }
-
-        public async Task DealCards(string userId, int pinCode)
-        {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if (item.Key == Guid.Empty)
-            {
-                return;
-            }
-
-            var game = item.Value;
-            game.DealCards();
-
-            await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameState", new DealtCardsModel
-                {
-                    GameSessionId = game.Id,
-                    CanDealCards = game.CanDealCards,
-                    Hands = game.Players.Select(x => new CardHand
-                    {
-                        UserId = x.UserId,
-                        Cards = x.Hand
-                    }).ToList()
-                });
+                .SendAsync("GameState", new DealtCardsModel(game.Id, game.CanDealCards, game.GetHandByPlayer(userId)));
         }
 
         public async Task<List<Player>> GetPlayers(int pinCode)
@@ -149,8 +116,9 @@ namespace BlazorGame.Data
                 .SendAsync("PlayerRetired", new { UserId = userId });
         }
 
-        public async Task DealCards(int pinCode)
+        public async Task DealCards(string userId, int pinCode)
         {
+            // Crude implementation assumes unique PINCode
             var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
             if (item.Key == Guid.Empty)
             {
@@ -161,11 +129,7 @@ namespace BlazorGame.Data
             game.DealCards();
 
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("CardsDealt", new DealtCardsModel
-                {
-                    GameSessionId = game.Id,
-                    Hands = game.Players.Select(x => new CardHand { UserId = x.UserId, Cards = x.Hand }).ToList()
-                });
+                .SendAsync("GameState", new DealtCardsModel(game.Id, game.CanDealCards, game.Hands));
         }
     }
 }
