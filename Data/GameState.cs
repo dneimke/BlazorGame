@@ -83,18 +83,18 @@ namespace BlazorGame.Data
 
         public void DealCards()
         {
-            if(!_players.Any())
-            {
-                _hasDealtCards = false;
-                return;
-            }
-
             if (_hasDealtCards)
                 throw new InvalidOperationException("Cards have been dealt");
 
-            if (_state == GameStatus.Complete)
+            if (_state is GameStatus.Complete)
             {
                 throw new InvalidOperationException("Game is closed");
+            }
+
+            if (!_players.Any())
+            {
+                _hasDealtCards = false;
+                return;
             }
 
             _players.ForEach(p => p.Hand.Clear());
@@ -170,12 +170,10 @@ namespace BlazorGame.Data
 
         public void LeaveGame()
         {
-            if(_game == null)
+            if (_game is not null)
             {
-                return;
+                _game = null;
             }
-
-            _game = null;
         }
     }
 }

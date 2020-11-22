@@ -96,7 +96,7 @@ else
         }
         catch { }
 
-        if (currentSession != null)
+        if (currentSession is not null)
         {
             currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
             await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession);
@@ -106,7 +106,7 @@ else
 
     private async Task OnLeaveGame()
     {
-        if (currentSession != null)
+        if (currentSession is not null)
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
             await _sessionService.LeaveGame(connectionId, currentSession.PinCode);
@@ -118,7 +118,7 @@ else
     private async Task OnRefreshGame()
     {
         var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-        if (currentSession != null)
+        if (currentSession is not null)
         {
             currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
         }
