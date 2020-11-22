@@ -1,6 +1,4 @@
 ﻿@page "/"
-@inject BlazorGame.Data.GameSessionService _sessionService
-@inject IJSRuntime JS
 
 @if (currentSession == null)
 {
@@ -72,65 +70,3 @@ else
 }
 
 <button type="button" id="deal-button" style="display: none" class="mt-5 btn btn-info">Deal</button>
-
-@code {
-    StartGameModel startGameModel = new();
-    PlayerSessionModel? currentSession = null;
-    List<Player> currentPlayers = new();
-
-    private async Task OnEnterGame()
-    {
-        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-
-        try
-        {
-            if (startGameModel.Mode == JoinMode.CreateNew)
-            {
-                currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
-            }
-            else
-            {
-                currentSession = await _sessionService.JoinGame(connectionId, startGameModel.Username, startGameModel.PINCode);
-            }
-
-        }
-        catch { }
-
-        if (currentSession is not null)
-        {
-            currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
-            await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession);
-            startGameModel = new();
-        }
-    }
-
-    private async Task OnLeaveGame()
-    {
-        if (currentSession is not null)
-        {
-            var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-            await _sessionService.LeaveGame(connectionId, currentSession.PinCode);
-            startGameModel = new();
-            currentSession = null;
-        }
-    }
-
-    private async Task OnRefreshGame()
-    {
-        var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-        if (currentSession is not null)
-        {
-            currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("StartTimer");
-        }
-
-        await base.OnAfterRenderAsync(firstRender);
-    }
-}
