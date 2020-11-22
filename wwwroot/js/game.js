@@ -3,9 +3,9 @@ class Game {
     _hasChanges = false;
     _context;
     _dealButton = null;
+    _connection = null;
     
-    constructor(connection) {
-        this.connection = connection;
+    constructor() {
         this.state = new GameState();
         this.players = []; // Player[]
     }
@@ -18,10 +18,10 @@ class Game {
     set HasChanges(val) { this._hasChanges = val; }
 
     async GetConnectionId() {
-        if (!this.connection) {
+        if (!this._connection) {
             await this.configureConnection();
         }
-        return this.connection.connectionId;
+        return this._connection.connectionId;
     }
 
     async InitializeGameState(currentSession) {
@@ -29,11 +29,11 @@ class Game {
         this._context = currentSession;
         this._dealButton = document.getElementById('deal-button')
         this._dealButton.addEventListener('click', async (e) => {
-            await self.connection.invoke("DealCards", currentSession.pinCode);
+            await self._connection.invoke("DealCards", currentSession.pinCode);
         });
         this._dealButton.style.display = 'none';
         try {
-            await this.connection.invoke("RequestGameState", currentSession.pinCode);
+            await this._connection.invoke("RequestGameState", currentSession.pinCode);
         } catch (err) {
             console.error(err);
         }
@@ -54,7 +54,6 @@ class Game {
         });  
 
         let style = state.canDealCards ? 'block' : 'none';
-        console.info(style)
         this._dealButton.style.display = style;
     }
 
@@ -79,7 +78,7 @@ class Game {
         })
 
         await connection.start();
-        this.connection = connection;        
+        this._connection = connection;        
     }
 }
 
