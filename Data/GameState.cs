@@ -37,7 +37,7 @@ namespace BlazorGame.Data
         public bool CanDealCards { 
             get
             {
-                return !_hasDealtCards;
+                return _hasDealtCards is false;
             }
         }
 
