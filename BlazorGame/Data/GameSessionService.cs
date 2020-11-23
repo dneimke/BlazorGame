@@ -24,7 +24,7 @@ namespace BlazorGame.Data
                 return Task.FromResult(false);
             }
 
-            return Task.FromResult(game.CanDealCards);
+            return Task.FromResult(game!.CanDealCards);
         }
 
         public async Task<List<Player>> GetPlayers(int pinCode)
@@ -34,7 +34,7 @@ namespace BlazorGame.Data
                 return new();
             }
 
-            return await Task.FromResult(game.Players);
+            return await Task.FromResult(game!.Players);
         }
 
         public async Task<GameCreatedModel> CreateGame(string userId, string userName, int pinCode)
@@ -67,11 +67,11 @@ namespace BlazorGame.Data
             }
             
             var player = new Player(userId, userName);
-            player.Join(game);
+            player.Join(game!);
 
             var session = new PlayerJoinedModel
             {
-                GameSessionId = game.Id,
+                GameSessionId = game!.Id,
                 UserId = userId,
                 Username = userName,
                 PinCode = pinCode,
@@ -92,7 +92,7 @@ namespace BlazorGame.Data
                 return;
             }
 
-            game.RetirePlayer(userId);
+            game!.RetirePlayer(userId);
 
             await _hubContext.Groups.RemoveFromGroupAsync(userId, game.Id.ToString());
             await _hubContext.Clients.Group(game.Id.ToString())
@@ -106,7 +106,7 @@ namespace BlazorGame.Data
                 return;
             }
 
-            game.DealCards();
+            game!.DealCards();
 
             await _hubContext.Clients.Group(game.Id.ToString())
                 .SendAsync("GameStateChanged", new DealtCardsModel(game.Id, game.CanDealCards, game.Hands));

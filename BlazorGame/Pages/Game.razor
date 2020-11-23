@@ -1,14 +1,15 @@
 ﻿@page "/"
 @implements IDisposable
+@using BlazorGame.Components
 
-@if (_currentSession == null)
+@if (_currentGame == null)
 {
     <h3>Start a new game</h3>
     <JoinGame OnJoinedGame="OnJoinGame"></JoinGame>
 }
 else
 {
-    <h1>Game Code: @_currentSession.PinCode</h1>
+    <h1>Game Code: @_currentGame.PinCode</h1>
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
     if (_currentPlayers.Any())

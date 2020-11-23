@@ -11,7 +11,7 @@ namespace BlazorGame.Pages
     public partial class Game
     {
         [Inject]
-        GameSessionService _sessionService { get; set; }
+        GameSessionService _gameService { get; set; }
 
         [Inject]
         IJSRuntime JS { get; set; }
@@ -24,7 +24,7 @@ namespace BlazorGame.Pages
             }
         }
 
-        PlayerSessionModel? _currentSession = null;
+        PlayerSessionModel? _currentGame = null;
         List<Player> _currentPlayers = new();
         bool _canDeal = false;
 
@@ -32,16 +32,16 @@ namespace BlazorGame.Pages
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
-            _currentSession = joinGameModel.Mode switch
+            _currentGame = joinGameModel.Mode switch
             {
-                JoinMode.CreateNew => await _sessionService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode),
-                _ => await _sessionService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode)
+                JoinMode.CreateNew => await _gameService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode),
+                _ => await _gameService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode)
             };
 
-            if (_currentSession is not null)
+            if (_currentGame is not null)
             {
-                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
-                _currentPlayers = await _sessionService.GetPlayers(_currentSession.PinCode);
+                _canDeal = await _gameService.CanDeal(_currentGame.PinCode);
+                _currentPlayers = await _gameService.GetPlayers(_currentGame.PinCode);
                 await JS.InvokeVoidAsync("Game.InitializeGameState", _serverReference.Value);
             }
         }
@@ -49,13 +49,13 @@ namespace BlazorGame.Pages
         private async Task OnDealCards()
         {
             
-            if (_currentSession is not null)
+            if (_currentGame is not null)
             {
-                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
+                _canDeal = await _gameService.CanDeal(_currentGame.PinCode);
                 if(_canDeal)
                 {
                     var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-                    await _sessionService.DealCards(connectionId, _currentSession.PinCode);
+                    await _gameService.DealCards(connectionId, _currentGame.PinCode);
                     _canDeal = false;
                 }
             }
@@ -63,11 +63,11 @@ namespace BlazorGame.Pages
 
         private async Task OnLeaveGame()
         {
-            if (_currentSession is not null)
+            if (_currentGame is not null)
             {
                 var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-                await _sessionService.LeaveGame(connectionId, _currentSession.PinCode);
-                _currentSession = null;
+                await _gameService.LeaveGame(connectionId, _currentGame.PinCode);
+                _currentGame = null;
                 _canDeal = false;
             }
         }
@@ -75,13 +75,11 @@ namespace BlazorGame.Pages
         [JSInvokable("RefreshGame")]
         public async Task RefreshGame()
         {
-            if (_currentSession is not null)
+            if (_currentGame is not null)
             {
-                _currentPlayers = await _sessionService.GetPlayers(_currentSession.PinCode);
-                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
+                _currentPlayers = await _gameService.GetPlayers(_currentGame.PinCode);
+                _canDeal = await _gameService.CanDeal(_currentGame.PinCode);
             }
-
-            StateHasChanged();
         }
 
         public void Dispose()
