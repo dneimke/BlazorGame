@@ -15,23 +15,25 @@ namespace BlazorGame.Pages
         [Inject]
         IJSRuntime JS { get; set; }
 
-        StartGameModel startGameModel = new();
+        ElementReference _dealButton;
+
         PlayerSessionModel? currentSession = null;
         List<Player> currentPlayers = new();
+        bool _isDirty = false;
 
-        private async Task OnEnterGame()
+        private async Task OnJoinGame(JoinGameModel joinGameModel)
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
             try
             {
-                if (startGameModel.Mode == JoinMode.CreateNew)
+                if (joinGameModel.Mode == JoinMode.CreateNew)
                 {
-                    currentSession = await _sessionService.CreateGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+                    currentSession = await _sessionService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode);
                 }
                 else
                 {
-                    currentSession = await _sessionService.JoinGame(connectionId, startGameModel.Username, startGameModel.PINCode);
+                    currentSession = await _sessionService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode);
                 }
 
             }
@@ -40,8 +42,7 @@ namespace BlazorGame.Pages
             if (currentSession is not null)
             {
                 currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
-                await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession);
-                startGameModel = new();
+                _isDirty = true;
             }
         }
 
@@ -51,7 +52,6 @@ namespace BlazorGame.Pages
             {
                 var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
                 await _sessionService.LeaveGame(connectionId, currentSession.PinCode);
-                startGameModel = new();
                 currentSession = null;
             }
         }
@@ -70,6 +70,12 @@ namespace BlazorGame.Pages
             if (firstRender)
             {
                 await JS.InvokeVoidAsync("StartTimer");
+            }
+
+            if(_isDirty && currentSession != null)
+            {
+                await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession, _dealButton);
+                _isDirty = false;
             }
 
             await base.OnAfterRenderAsync(firstRender);

@@ -24,15 +24,16 @@ class Game {
         return this._connection.connectionId;
     }
 
-    async InitializeGameState(currentSession) {
-        const self = this;
+    async InitializeGameState(currentSession, dealButton) {
+        let self = this;
         this._context = currentSession;
-        this._dealButton = document.getElementById('deal-button')
-        this._dealButton.addEventListener('click', async (e) => {
-            await self._connection.invoke("DealCards", currentSession.pinCode);
-        });
-        this._dealButton.style.display = 'none';
         try {
+
+            this._dealButton = dealButton
+            this._dealButton.addEventListener('click', async (e) => {
+                await self._connection.invoke("DealCards", self._context.pinCode);
+            });
+
             await this._connection.invoke("RequestGameState", currentSession.pinCode);
         } catch (err) {
             console.error(err);
@@ -44,17 +45,15 @@ class Game {
             let list = document.getElementById(`hand_${hand.userId}`);
             if (list) {
                 let items = hand.cards.reduce((acc, card) => {
-                    console.info('card', card)
                     return acc + `<li class="list-inline-item">
                         <span class="badge badge-${card.color} mr-3" style="font-size: 1.5em">${card.name} ${card.icon}</span>
                     </li>`;
                 }, '');
                 list.innerHTML = items;
             }
-        });  
-
-        let style = state.canDealCards ? 'block' : 'none';
-        this._dealButton.style.display = style;
+        });          
+        
+        this._dealButton.style.display = state.canDealCards ? 'block' : 'none';
     }
 
     async configureConnection() {
@@ -123,6 +122,7 @@ class Card {
 
 const game = new Game();
 window.Game = game;
+
 StartTimer = () => {
     console.info('Starting game loop');
     setInterval(function () {

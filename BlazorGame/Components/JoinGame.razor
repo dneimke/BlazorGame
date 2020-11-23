@@ -1,0 +1,45 @@
+﻿
+<EditForm Model="@model" OnValidSubmit="@OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="username" class="font-weight-bold mr-2">Game Mode</label>
+        <small id="mode-help" class="form-text text-muted">Start a new game or join an existing one.</small>
+        <InputRadioGroup Name="gameMode" @bind-Value="model.Mode" class="form-control">
+            <InputRadio Name="gameMode" Value="JoinMode.CreateNew" class="mr-2" />Create New
+            <InputRadio Name="gameMode" Value="JoinMode.JoinExisting" class="mx-2" />Join Existing<br>
+        </InputRadioGroup>
+    </div>
+
+    <hr />
+
+    <div class="form-row align-items-center">
+        <div class="col-auto">
+            <label for="username" class="font-weight-bold mr-2">Username</label>
+            <input type="text" class="form-control" id="username-input" aria-describedby="username-help" @bind-value="model.Username">
+            <small id="username-help" class="form-text text-muted">Enter a short username.</small>
+        </div>
+        <div class="col-auto">
+            <label for="pin-input" class="font-weight-bold mr-2">PIN</label>
+            <input type="number" class="form-control" id="pin-input" aria-describedby="pin-help" maxlength="4" @bind-value="model.PINCode">
+            <small id="pin-help" class="form-text text-muted">Enter a 4-digit PIN code for this game.</small>
+        </div>
+        <div class="col-auto">
+            <button type="submit" id="join-button" class="btn btn-primary mb-2">Go!</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    public JoinGameModel model { get; set; } = new ();
+
+    [Parameter]
+    public EventCallback<JoinGameModel> OnJoinedGame { get; set; }
+
+    private async Task OnSubmit()
+    {
+        await OnJoinedGame.InvokeAsync(model);
+        model = new();
+    }
+}

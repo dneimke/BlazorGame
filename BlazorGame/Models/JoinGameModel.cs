@@ -5,7 +5,7 @@ namespace BlazorGame.Models
 {
     public enum JoinMode { CreateNew, JoinExisting }
 
-    public class StartGameModel
+    public class JoinGameModel
     {
         [Required, EnumDataType(typeof(JoinMode))]
         public JoinMode? Mode { get; set; } = null;
