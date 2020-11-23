@@ -27,19 +27,11 @@ namespace BlazorGame.Pages
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
-            try
+            currentSession = joinGameModel.Mode switch
             {
-                if (joinGameModel.Mode == JoinMode.CreateNew)
-                {
-                    currentSession = await _sessionService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode);
-                }
-                else
-                {
-                    currentSession = await _sessionService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode);
-                }
-
-            }
-            catch { }
+                JoinMode.CreateNew => await _sessionService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode),
+                _ => await _sessionService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode)
+            };
 
             if (currentSession is not null)
             {
