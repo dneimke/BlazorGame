@@ -1,17 +1,17 @@
 ﻿@page "/"
 @implements IDisposable
 
-@if (currentSession == null)
+@if (_currentSession == null)
 {
     <h3>Start a new game</h3>
     <JoinGame OnJoinedGame="OnJoinGame"></JoinGame>
 }
 else
 {
-    <h1>Game Code: @currentSession.PinCode</h1>
+    <h1>Game Code: @_currentSession.PinCode</h1>
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
-    if (currentPlayers.Any())
+    if (_currentPlayers.Any())
     {
         <h3>Players</h3>
         <table class="table table-sm">
@@ -22,18 +22,26 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var player in currentPlayers)
+                @foreach (var player in _currentPlayers)
                 {
                     <tr class="row">
                         <th scope="row" class="col-sm-4">@player.Name</th>
                         <td class="col-sm-8">
-                            <ul class="list-inline" id="hand_@player.UserId"></ul>
+                            <ul class="list-inline" id="hand_@player.UserId">
+                                @foreach (var card in player.Hand)
+                                {
+                                    <PlayingCard Value="@card"></PlayingCard>
+                                }
+                            </ul>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
 
-        <button type="button" @ref="_dealButton" style="display: none" class="mt-5 btn btn-info">Deal</button>
+        if (_canDeal)
+        {
+            <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
+        }
     }
 }

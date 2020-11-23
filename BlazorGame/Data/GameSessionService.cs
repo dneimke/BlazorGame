@@ -17,31 +17,22 @@ namespace BlazorGame.Data
 
         public GameSessionService(IHubContext<GameHub> hubContext) => _hubContext = hubContext;
 
-        public async Task RequestGameState(string userId, int pinCode)
+        public Task<bool> CanDeal(int pinCode)
         {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if (item.Key == Guid.Empty)
+            if (!TryGetGame(pinCode, out var game))
             {
-                return;
+                return Task.FromResult(false);
             }
 
-            var game = item.Value;
-
-            await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameState", new DealtCardsModel(game.Id, game.CanDealCards, game.GetHandByPlayer(userId)));
+            return Task.FromResult(game.CanDealCards);
         }
 
         public async Task<List<Player>> GetPlayers(int pinCode)
         {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if (item.Key == Guid.Empty)
+            if (!TryGetGame(pinCode, out var game))
             {
                 return new();
             }
-
-            var game = item.Value;
 
             return await Task.FromResult(game.Players);
         }
@@ -71,14 +62,9 @@ namespace BlazorGame.Data
 
         public async Task<PlayerJoinedModel?> JoinGame(string userId, string userName, int pinCode)
         {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if(item.Key == Guid.Empty)
-            {
+            if(!TryGetGame(pinCode, out var game)) {
                 return null;
             }
-
-            var game = item.Value;
             
             var player = new Player(userId, userName);
             player.Join(game);
@@ -101,14 +87,11 @@ namespace BlazorGame.Data
 
         public async Task LeaveGame(string userId, int pinCode)
         {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if (item.Key == Guid.Empty)
+            if (!TryGetGame(pinCode, out var game))
             {
                 return;
             }
 
-            var game = item.Value;
             game.RetirePlayer(userId);
 
             await _hubContext.Groups.RemoveFromGroupAsync(userId, game.Id.ToString());
@@ -118,18 +101,29 @@ namespace BlazorGame.Data
 
         public async Task DealCards(string userId, int pinCode)
         {
-            // Crude implementation assumes unique PINCode
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode);
-            if (item.Key == Guid.Empty)
+            if (!TryGetGame(pinCode, out var game))
             {
                 return;
             }
 
-            var game = item.Value;
             game.DealCards();
 
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameState", new DealtCardsModel(game.Id, game.CanDealCards, game.Hands));
+                .SendAsync("GameStateChanged", new DealtCardsModel(game.Id, game.CanDealCards, game.Hands));
+        }
+
+        // Crude implementation assumes unique PINCode
+        private bool TryGetGame(int pinCode, out Game? game)
+        {
+            game = null;
+            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode && x.Value.State == GameStatus.Open);
+            if (item.Key != Guid.Empty)
+            {
+                game = item.Value;
+                return true;
+            }
+
+            return false;
         }
     }
 }

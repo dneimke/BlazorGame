@@ -1,124 +1,29 @@
 ﻿
 class Game {
-    _hasChanges = false;
-    _context;
-    _dealButton = null;
-    _server;
-    _connection = null;
+    _razorServer;
+    _signalR;
     
-    constructor() {
-        this.state = new GameState();
-        this.players = []; // Player[]
-    }
-
-    addPlayer(player) {
-        this.players.push(player);
-    }
-
-    get HasChanges() { return this._hasChanges; }
-    set HasChanges(val) { this._hasChanges = val; }
-
     async GetConnectionId() {
-        if (!this._connection) {
+        if (!this._signalR) {
             await this.configureConnection();
         }
-        return this._connection.connectionId;
+        return this._signalR.connectionId;
     }
 
-    async InitializeGameState(currentSession, dealButton, server) {
-        let self = this;
-        this._server = server;
-        this._context = currentSession;
-        try {
-
-            this._dealButton = dealButton
-            this._dealButton.addEventListener('click', async (e) => {
-                await self._connection.invoke("DealCards", self._context.pinCode);
-            });
-
-            await this._connection.invoke("RequestGameState", currentSession.pinCode);
-        } catch (err) {
-            console.error(err);
-        }
+    async InitializeGameState(server) {
+        this._razorServer = server;
     }
     
-    setGameState(state) {
-        state.hands.forEach(hand => {
-            let list = document.getElementById(`hand_${hand.userId}`);
-            if (list) {
-                let items = hand.cards.reduce((acc, card) => {
-                    return acc + `<li class="list-inline-item">
-                        <span class="badge badge-${card.color} mr-3" style="font-size: 1.5em">${card.name} ${card.icon}</span>
-                    </li>`;
-                }, '');
-                list.innerHTML = items;
-            }
-        });          
-        
-        this._dealButton.style.display = state.canDealCards ? 'block' : 'none';
-    }
-
     async configureConnection() {
         const connection = new signalR.HubConnectionBuilder().withUrl("/gameHub").build();
-        let self = this;
+        
+        connection.on("GameCreated", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
+        connection.on("PlayerJoined", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
+        connection.on("PlayerRetired", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
+        connection.on("GameStateChanged", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
 
-        connection.on("GameCreated", function (message) {
-            self._server.invokeMethodAsync('RefreshGame');
-        })
-
-        connection.on("PlayerJoined", function (message) {
-            self._server.invokeMethodAsync('RefreshGame');
-        })
-
-        connection.on("PlayerRetired", function (message) {
-            self._server.invokeMethodAsync('RefreshGame');
-        })
-
-        connection.on("GameState", function (message) {
-            self.setGameState(message);
-        })
-
+        this._signalR = connection;
         await connection.start();
-        this._connection = connection;        
-    }
-}
-
-class GameState {
-    constructor() {
-        this.currentTurn = null;
-        this.isPlaying = false;
-    }
-
-    load(state) {
-        this.currentTurn = state.turn;
-        this.isPlaying = state.isPlaying;
-    }
-}
-
-class Player {
-    constructor(name) {
-        this.name = name;
-        this.hand = []; // Card[]
-    }
-
-    joinGame(game) {
-        game.addPlayer(this);
-    }
-
-    show() {
-        console.info(`${this.name} has ${this.hand.length} cards.`)
-    }
-}
-
-class Card {
-    constructor(name, sentiment) {
-        this.name = name;
-        this.sentiment = sentiment;
-        this.isPlayed = false;
-    }
-
-    play() {
-        this.isPlayed = true;
     }
 }
 

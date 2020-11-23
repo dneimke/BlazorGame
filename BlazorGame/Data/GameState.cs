@@ -15,6 +15,7 @@ namespace BlazorGame.Data
 
     public enum GameStatus
     {
+        None,
         Open,
         Complete
     }
@@ -58,7 +59,7 @@ namespace BlazorGame.Data
         }
 
         private readonly Player? _creator;
-        private GameStatus _state = GameStatus.Complete;
+        public GameStatus State { get; private set; } = GameStatus.None;
 
         public Game(int pinCode, Player creator)
         {
@@ -66,7 +67,7 @@ namespace BlazorGame.Data
             PinCode = pinCode;
             _players.Add(creator);
             _creator = creator;
-            _state = GameStatus.Open;
+            State = GameStatus.Open;
             _cards = BuildDeck();
         }
 
@@ -86,7 +87,7 @@ namespace BlazorGame.Data
             if (_hasDealtCards)
                 throw new InvalidOperationException("Cards have been dealt");
 
-            if (_state is GameStatus.Complete)
+            if (State is GameStatus.Complete)
             {
                 throw new InvalidOperationException("Game is closed");
             }
@@ -141,6 +142,12 @@ namespace BlazorGame.Data
             var cards = player.Hand; // TODO: do something with these
             player.Hand.Clear();
             _players.Remove(player);
+
+            if(!_players.Any())
+            {
+                State = GameStatus.Complete;
+            }
+
             return player;
         }
     }

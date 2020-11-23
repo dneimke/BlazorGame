@@ -16,73 +16,80 @@ namespace BlazorGame.Pages
         [Inject]
         IJSRuntime JS { get; set; }
 
-        ElementReference _dealButton;
-        DotNetObjectReference<Game> _serverReference;
+        Lazy<DotNetObjectReference<Game>> _serverReference
+        {
+            get
+            {
+                return new(() => DotNetObjectReference.Create(this));
+            }
+        }
 
-        PlayerSessionModel? currentSession = null;
-        List<Player> currentPlayers = new();
-        bool _isDirty = false;
+        PlayerSessionModel? _currentSession = null;
+        List<Player> _currentPlayers = new();
+        bool _canDeal = false;
 
         private async Task OnJoinGame(JoinGameModel joinGameModel)
         {
             var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
 
-            currentSession = joinGameModel.Mode switch
+            _currentSession = joinGameModel.Mode switch
             {
                 JoinMode.CreateNew => await _sessionService.CreateGame(connectionId, joinGameModel.Username, joinGameModel.PINCode),
                 _ => await _sessionService.JoinGame(connectionId, joinGameModel.Username, joinGameModel.PINCode)
             };
 
-            if (currentSession is not null)
+            if (_currentSession is not null)
             {
-                currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
-                _isDirty = true;
+                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
+                _currentPlayers = await _sessionService.GetPlayers(_currentSession.PinCode);
+                await JS.InvokeVoidAsync("Game.InitializeGameState", _serverReference.Value);
+            }
+        }
+
+        private async Task OnDealCards()
+        {
+            
+            if (_currentSession is not null)
+            {
+                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
+                if(_canDeal)
+                {
+                    var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
+                    await _sessionService.DealCards(connectionId, _currentSession.PinCode);
+                    _canDeal = false;
+                }
             }
         }
 
         private async Task OnLeaveGame()
         {
-            if (currentSession is not null)
+            if (_currentSession is not null)
             {
                 var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
-                await _sessionService.LeaveGame(connectionId, currentSession.PinCode);
-                currentSession = null;
+                await _sessionService.LeaveGame(connectionId, _currentSession.PinCode);
+                _currentSession = null;
+                _canDeal = false;
             }
         }
 
         [JSInvokable("RefreshGame")]
         public async Task RefreshGame()
         {
-            if (currentSession is not null)
+            if (_currentSession is not null)
             {
-                currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
+                _currentPlayers = await _sessionService.GetPlayers(_currentSession.PinCode);
+                _canDeal = await _sessionService.CanDeal(_currentSession.PinCode);
             }
 
             StateHasChanged();
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                _serverReference = DotNetObjectReference.Create(this);
-            }
-
-            if(_isDirty && currentSession != null)
-            {
-                await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession, _dealButton, _serverReference);
-                _isDirty = false;
-            }
-
-            await base.OnAfterRenderAsync(firstRender);
-        }
-
         public void Dispose()
         {
             GC.SuppressFinalize(this);
-            if (_serverReference != null)
+            if (_serverReference.IsValueCreated)
             {
-                _serverReference.Dispose();
+                _serverReference.Value.Dispose();
             }
         }
     }
