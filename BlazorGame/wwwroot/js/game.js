@@ -3,6 +3,7 @@ class Game {
     _hasChanges = false;
     _context;
     _dealButton = null;
+    _server;
     _connection = null;
     
     constructor() {
@@ -24,8 +25,9 @@ class Game {
         return this._connection.connectionId;
     }
 
-    async InitializeGameState(currentSession, dealButton) {
+    async InitializeGameState(currentSession, dealButton, server) {
         let self = this;
+        this._server = server;
         this._context = currentSession;
         try {
 
@@ -61,15 +63,15 @@ class Game {
         let self = this;
 
         connection.on("GameCreated", function (message) {
-            self._hasChanges = true;
+            self._server.invokeMethodAsync('RefreshGame');
         })
 
         connection.on("PlayerJoined", function (message) {
-            self._hasChanges = true;
+            self._server.invokeMethodAsync('RefreshGame');
         })
 
         connection.on("PlayerRetired", function (message) {
-            self._hasChanges = true;
+            self._server.invokeMethodAsync('RefreshGame');
         })
 
         connection.on("GameState", function (message) {
@@ -122,15 +124,3 @@ class Card {
 
 const game = new Game();
 window.Game = game;
-
-StartTimer = () => {
-    console.info('Starting game loop');
-    setInterval(function () {
-        if (game.HasChanges) {
-            try {
-                document.getElementById("refresh-button").click();
-            } catch { }            
-            game.HasChanges = false;
-        }
-    }, 1000);
-}

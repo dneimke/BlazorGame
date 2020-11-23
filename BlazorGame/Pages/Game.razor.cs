@@ -2,6 +2,7 @@
 using BlazorGame.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace BlazorGame.Pages
         IJSRuntime JS { get; set; }
 
         ElementReference _dealButton;
+        DotNetObjectReference<Game> _serverReference;
 
         PlayerSessionModel? currentSession = null;
         List<Player> currentPlayers = new();
@@ -56,29 +58,40 @@ namespace BlazorGame.Pages
             }
         }
 
-        private async Task OnRefreshGame()
+        [JSInvokable("RefreshGame")]
+        public async Task RefreshGame()
         {
-            var connectionId = await JS.InvokeAsync<string>("Game.GetConnectionId");
             if (currentSession is not null)
             {
                 currentPlayers = await _sessionService.GetPlayers(currentSession.PinCode);
             }
+
+            StateHasChanged();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
-                await JS.InvokeVoidAsync("StartTimer");
+                _serverReference = DotNetObjectReference.Create(this);
             }
 
             if(_isDirty && currentSession != null)
             {
-                await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession, _dealButton);
+                await JS.InvokeVoidAsync("Game.InitializeGameState", currentSession, _dealButton, _serverReference);
                 _isDirty = false;
             }
 
             await base.OnAfterRenderAsync(firstRender);
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+            if (_serverReference != null)
+            {
+                _serverReference.Dispose();
+            }
         }
     }
 }
