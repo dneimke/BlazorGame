@@ -1,5 +1,9 @@
 # BlazorGame
 
+![Build and deploy ASP.Net Core app to Azure Web App - blazor-game](https://github.com/dneimke/BlazorGame/workflows/Build%20and%20deploy%20ASP.Net%20Core%20app%20to%20Azure%20Web%20App%20-%20blazor-game/badge.svg)
+
+This game is deployed here https://blazor-game.azurewebsites.net/
+
 A Blazor Server application that allows multiple players to play a game of snap across the internet.
 
 A game is first created and given a PIN Code. 
