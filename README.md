@@ -4,7 +4,9 @@
 
 This game is deployed here https://blazor-game.azurewebsites.net/
 
-A Blazor Server application that allows multiple players to play a game of snap across the internet. NOTE: this is WIP.  Currently multiple players can join a session and deal cards but they cannot play the cards at this stage.
+A Blazor Server application that allows multiple players to play a game of snap across the internet. 
+
+This is not a robust game, it's just a simple demo while I learn more about Blazor. NOTE: Currently multiple players can join a session and deal cards but they cannot play the cards at this stage.
 
 A game is first created and given a PIN Code. 
 
