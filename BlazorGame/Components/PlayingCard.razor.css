@@ -1,0 +1,83 @@
+﻿/* https://selfthinker.github.io/CSS-Playing-Cards/ */
+
+.p-card {
+    display: inline-block;
+    width: 3.3em;
+    height: 4.6em;
+    border: 1px solid #666;
+    border-radius: .3em;
+    padding: .25em;
+    margin: 0 .5em .5em 0;
+    text-align: center;
+    font-size: 1.7em; /* @change: adjust this value to make bigger or smaller cards */
+    font-weight: normal;
+    font-family: Arial, sans-serif;
+    position: relative;
+    background-color: #fff;
+    box-shadow: .2em .2em .5em #333;
+}
+
+span.p-card:hover,
+strong .p-card {
+    bottom: 1em;
+}
+
+.rank-monkey {
+    color: #f00 !important;
+}
+
+.rank-panda {
+    color: #f00 !important;
+}
+
+.rank-spider {
+    color: #000 !important;
+}
+
+.rank-tiger {
+    color: #000 !important;
+}
+
+/* top left main info (rank and suit) */
+
+.p-card .suit {
+    display: block;
+    line-height: 1;
+    text-align: left;
+}
+
+.p-card .rank, .card .suit {
+    line-height: .7;
+    font-size: 0.9rem;
+}
+
+.p-card .suit:after {
+    display: block;
+    margin-top: -.8em;
+    text-align: center;
+    white-space: pre;
+    line-height: .9;
+    font-size: 1.3em;
+    word-spacing: -.15em;
+    
+    position: absolute;
+    content: "\2766";
+    top: 2.4em;
+    left: .6em;
+}
+
+.p-card.monkey .suit:after {
+    content: "🐵";
+}
+
+.p-card.panda .suit:after {
+    content: "🐼";
+}
+
+.p-card.spider .suit:after {
+    content: "🕷";
+}
+
+.p-card.tiger .suit:after {
+    content: "🐯";
+}

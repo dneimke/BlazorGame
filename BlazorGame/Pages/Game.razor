@@ -2,17 +2,17 @@
 @implements IDisposable
 @using BlazorGame.Components
 
-@if (_currentGame == null)
+@if (_gameState == null)
 {
     <h3>Start a new game</h3>
     <JoinGame OnJoinedGame="OnJoinGame"></JoinGame>
 }
 else
 {
-    <h1>Game Code: @_currentGame.PinCode</h1>
+    <h1>Game Code: @_gameState.PinCode</h1>
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
-    if (_currentPlayers.Any())
+    if (_gameState.Hands.Any())
     {
         <h3>Players</h3>
         <table class="table table-sm">
@@ -23,13 +23,23 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var player in _currentPlayers)
+                @foreach (var hand in _gameState.Hands)
                 {
                     <tr class="row">
-                        <th scope="row" class="col-sm-4">@player.Name</th>
+                        <td class="col-sm-4">
+
+                            @if (hand.UserId == _gameState.CurrentPlayerId)
+                            {
+                                <strong>@hand.Name</strong> <small class="font-italic">(playing)</small>
+                            }
+                            else
+                            {
+                                @hand.Name
+                            }
+                        </td>
                         <td class="col-sm-8">
-                            <ul class="list-inline" id="hand_@player.UserId">
-                                @foreach (var card in player.Hand)
+                            <ul class="list-inline" id="hand_@hand.UserId">
+                                @foreach (var card in hand.Cards)
                                 {
                                     <PlayingCard Value="@card"></PlayingCard>
                                 }
@@ -40,7 +50,7 @@ else
             </tbody>
         </table>
 
-        if (_canDeal)
+        if (!_gameState.HasDealtCards)
         {
             <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
         }

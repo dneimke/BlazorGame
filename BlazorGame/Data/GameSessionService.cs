@@ -24,7 +24,7 @@ namespace BlazorGame.Data
                 return Task.FromResult(false);
             }
 
-            return Task.FromResult(game!.CanDealCards);
+            return Task.FromResult(!game.HasDealtCards);
         }
 
         public async Task<List<Player>> GetPlayers(int pinCode)
@@ -37,30 +37,22 @@ namespace BlazorGame.Data
             return await Task.FromResult(game!.Players);
         }
 
-        public async Task<GameCreatedModel> CreateGame(string userId, string userName, int pinCode)
+        public async Task<GameStateModel> CreateGame(string userId, string userName, int pinCode)
         {
             var player = new Player(userId, userName);
             var game = new Game(pinCode, player);
-
-            var session = new GameCreatedModel
-            {
-                GameSessionId = game.Id,
-                UserId = userId,
-                Username = userName,
-                PinCode = pinCode,
-                Role = GameRole.Creator
-            };
+            var gameState = new GameStateModel(game!.Id, game.HasDealtCards, game.CurrentTurn?.UserId, game.PinCode, game.Hands);
 
             _currentGames[game.Id] = game;
 
             await _hubContext.Groups.AddToGroupAsync(userId, game.Id.ToString());
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameCreated", session);
+                .SendAsync("GameCreated", gameState);
 
-            return session;
+            return gameState;
         }
 
-        public async Task<PlayerJoinedModel?> JoinGame(string userId, string userName, int pinCode)
+        public async Task<GameStateModel?> JoinGame(string userId, string userName, int pinCode)
         {
             if(!TryGetGame(pinCode, out var game)) {
                 return null;
@@ -69,20 +61,13 @@ namespace BlazorGame.Data
             var player = new Player(userId, userName);
             player.Join(game!);
 
-            var session = new PlayerJoinedModel
-            {
-                GameSessionId = game!.Id,
-                UserId = userId,
-                Username = userName,
-                PinCode = pinCode,
-                Role = GameRole.Player
-            };
+            var gameState = CurrentState(game!);
 
-            await _hubContext.Groups.AddToGroupAsync(userId, game.Id.ToString());
+            await _hubContext.Groups.AddToGroupAsync(userId, game!.Id.ToString());
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("PlayerJoined", session);
+                .SendAsync("PlayerJoined", gameState);
 
-            return session;
+            return gameState;
         }
 
         public async Task LeaveGame(string userId, int pinCode)
@@ -99,6 +84,16 @@ namespace BlazorGame.Data
                 .SendAsync("PlayerRetired", new { UserId = userId });
         }
 
+        public async Task<GameStateModel?> GetCurrentState(int pinCode)
+        {
+            if (!TryGetGame(pinCode, out var game))
+            {
+                return null;
+            }
+
+            return await Task.FromResult(CurrentState(game!));
+        }
+
         public async Task DealCards(string userId, int pinCode)
         {
             if (!TryGetGame(pinCode, out var game))
@@ -107,9 +102,15 @@ namespace BlazorGame.Data
             }
 
             game!.DealCards();
+            var gameState = CurrentState(game);
 
             await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("GameStateChanged", new DealtCardsModel(game.Id, game.CanDealCards, game.Hands));
+                .SendAsync("GameStateChanged", gameState);
+        }
+
+        private static GameStateModel CurrentState(Game game)
+        {
+            return new GameStateModel(game.Id, game.HasDealtCards, game.CurrentTurn?.UserId, game.PinCode, game.Hands);
         }
 
         // Crude implementation assumes unique PINCode

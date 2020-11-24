@@ -2,20 +2,23 @@
 class Game {
     _razorServer;
     _signalR;
+
+    constructor() {
+        this.configureConnection();
+    }
     
-    async GetConnectionId() {
+    GetConnectionId() {
         if (!this._signalR) {
-            await this.configureConnection();
+            this.configureConnection();
         }
         return this._signalR.connectionId;
     }
 
-    async InitializeGameState(server, tb) {
+    async InitializeGameState(server) {
         this._razorServer = server;
-        await GetConnectionId();
     }
     
-    async configureConnection() {
+    configureConnection() {
         const connection = new signalR.HubConnectionBuilder().withUrl("/gameHub").build();
         
         connection.on("GameCreated", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
@@ -24,7 +27,7 @@ class Game {
         connection.on("GameStateChanged", async (message) => await this._razorServer.invokeMethodAsync('RefreshGame'))
 
         this._signalR = connection;
-        await connection.start();
+        connection.start().then(x => console.info('Connection started'));
     }
 }
 

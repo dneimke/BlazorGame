@@ -1,10 +1,12 @@
 ﻿
 
 <li class="list-inline-item">
-    <span class="badge badge-@Value.Color mr-3" style="font-size: 1.5em">@Value.Name @Value.Icon</span>
+    <span class="p-card rank-@Value.Name @Value.Icon">
+        <span class="rank">@Value.Name</span>
+        <span class="suit"></span>
+    </span>
 </li>
-
-@code {
-    [Parameter]
-    public Card Value{ get; set; }
-}
+    @code {
+        [Parameter]
+        public Card Value { get; set; }
+    }

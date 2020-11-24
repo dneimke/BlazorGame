@@ -24,25 +24,49 @@ namespace BlazorGame.Data
     {
         List<string> _animals = new() { Animals.Monkey, Animals.Panda, Animals.Spider, Animals.Tiger };
         List<string> _colors = new() { "primary", "secondary", "danger", "warning" };
-        List<string> _icons = new() { "🐵", "🐼", "🕷", "🐯" };
+        List<string> _suits = new() { "monkey", "panda", "spider", "tiger" };
 
         List <Player> _players = new();
         List<Card> _cards = new();
+        private int _currentTurnIndex = -1;
 
-        bool _hasDealtCards = false;
-
-        public List<Card> Deck { get => _cards; }
-        public List<Player> Players { get => _players; }
         public Guid Id { get; }
         public int PinCode { get; }
-        public bool CanDealCards { 
+        public bool HasDealtCards => _currentTurnIndex >= 0;
+        public GameStatus State { get; private set; } = GameStatus.None;
+        public List<Player> Players { get => _players; }
+
+
+        public Game(int pinCode, Player creator)
+        {
+            Id = Guid.NewGuid();
+            PinCode = pinCode;
+            _players.Add(creator);
+            State = GameStatus.Open;
+            _cards = BuildDeck();
+        }
+
+        public Player? CurrentTurn 
+        { 
             get
             {
-                return _hasDealtCards is false;
+                if (_currentTurnIndex < 0)
+                    return null;
+
+                return _players.Skip(_currentTurnIndex).Take(1).First();
             }
         }
 
-        public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId)
+        public void CompleteTurn()
+        {
+            if (_currentTurnIndex < 0)
+                throw new InvalidOperationException("Cards have not been dealt.");
+
+            if (++_currentTurnIndex == _players.Count)
+                _currentTurnIndex = 0;
+        }
+
+        public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId, x.Name)
         {
             Cards = x.Hand
         }).ToList();
@@ -50,23 +74,10 @@ namespace BlazorGame.Data
 
         public List<CardHand> GetHandByPlayer(string userId)
         {
-            return Players.Where(x => x.UserId == userId).Select(x => new CardHand(x.UserId)
+            return Players.Where(x => x.UserId == userId).Select(x => new CardHand(x.UserId, x.Name)
             {
                 Cards = x.Hand
             }).ToList();
-        }
-
-        private readonly Player? _creator;
-        public GameStatus State { get; private set; } = GameStatus.None;
-
-        public Game(int pinCode, Player creator)
-        {
-            Id = Guid.NewGuid();
-            PinCode = pinCode;
-            _players.Add(creator);
-            _creator = creator;
-            State = GameStatus.Open;
-            _cards = BuildDeck();
         }
 
         private List<Card> BuildDeck()
@@ -74,15 +85,15 @@ namespace BlazorGame.Data
             var list = new List<Card>();
             for(var i = 0; i < _animals.Count; i++)
             {
-                list.Add(new(_animals[i], _colors[i], _icons[i]));
-                list.Add(new(_animals[i], _colors[i], _icons[i]));
+                list.Add(new(_animals[i], _colors[i], _suits[i]));
+                list.Add(new(_animals[i], _colors[i], _suits[i]));
             }
             return list;
         }
 
         public void DealCards()
         {
-            if (_hasDealtCards)
+            if (HasDealtCards)
                 throw new InvalidOperationException("Cards have been dealt");
 
             if (State is GameStatus.Complete)
@@ -92,7 +103,6 @@ namespace BlazorGame.Data
 
             if (!_players.Any())
             {
-                _hasDealtCards = false;
                 return;
             }
 
@@ -105,7 +115,7 @@ namespace BlazorGame.Data
                 i++;
             });
 
-            _hasDealtCards = true;
+            _currentTurnIndex = 0;
         }
 
 
@@ -117,7 +127,7 @@ namespace BlazorGame.Data
             if (_players.Any(x => x.Name == player.Name))
                 throw new InvalidOperationException("Username is already in use");
 
-            if (_hasDealtCards)
+            if (HasDealtCards)
                 throw new InvalidOperationException("Cards have been dealt");
 
             _players.Add(player);
@@ -141,11 +151,6 @@ namespace BlazorGame.Data
             player.Hand.Clear();
             _players.Remove(player);
 
-            if(!_players.Any())
-            {
-                State = GameStatus.Complete;
-            }
-
             return player;
         }
     }
@@ -155,8 +160,7 @@ namespace BlazorGame.Data
     public class Player
     {
         Game? _game;
-        readonly List<Card> _hand = new();
-
+        
         public string Name { get; init; }
         public string UserId { get; init; }
 
@@ -166,7 +170,7 @@ namespace BlazorGame.Data
             Name = name;
         }
 
-        public List<Card> Hand { get => _hand; }
+        public List<Card> Hand { get; init; } = new();
 
         public void Join(Game game)
         {
