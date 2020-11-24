@@ -1,14 +1,10 @@
 ﻿using BlazorGame.Data;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BlazorGame.Models
 {
-    public class CardHand
+    public record CardHand(string UserId)
     {
-        public string UserId { get; set; }
-        public List<Card> Cards { get; set; }
+        public List<Card> Cards { get; init;} = new();
     }
 }

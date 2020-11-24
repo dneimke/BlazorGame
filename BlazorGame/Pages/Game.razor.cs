@@ -16,6 +16,10 @@ namespace BlazorGame.Pages
         [Inject]
         IJSRuntime JS { get; set; }
 
+        PlayerSessionModel? _currentGame = null;
+        List<Player> _currentPlayers = new();
+        bool _canDeal = false;
+
         Lazy<DotNetObjectReference<Game>> _serverReference
         {
             get
@@ -23,10 +27,6 @@ namespace BlazorGame.Pages
                 return new(() => DotNetObjectReference.Create(this));
             }
         }
-
-        PlayerSessionModel? _currentGame = null;
-        List<Player> _currentPlayers = new();
-        bool _canDeal = false;
 
         private async Task OnJoinGame(JoinGameModel joinGameModel)
         {

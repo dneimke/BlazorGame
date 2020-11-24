@@ -42,18 +42,16 @@ namespace BlazorGame.Data
             }
         }
 
-        public List<CardHand> Hands => Players.Select(x => new CardHand
+        public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId)
         {
-            UserId = x.UserId,
             Cards = x.Hand
         }).ToList();
 
 
         public List<CardHand> GetHandByPlayer(string userId)
         {
-            return Players.Where(x => x.UserId == userId).Select(x => new CardHand
+            return Players.Where(x => x.UserId == userId).Select(x => new CardHand(x.UserId)
             {
-                UserId = x.UserId,
                 Cards = x.Hand
             }).ToList();
         }

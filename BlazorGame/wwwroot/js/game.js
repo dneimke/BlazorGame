@@ -10,8 +10,9 @@ class Game {
         return this._signalR.connectionId;
     }
 
-    async InitializeGameState(server) {
+    async InitializeGameState(server, tb) {
         this._razorServer = server;
+        await GetConnectionId();
     }
     
     async configureConnection() {
