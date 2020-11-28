@@ -1,18 +1,31 @@
 ﻿@page "/"
+
+
 @implements IDisposable
 @using BlazorGame.Components
 
 @if (_gameState == null)
 {
-    <h3>Start a new game</h3>
-    <JoinGame OnJoinedGame="OnJoinGame"></JoinGame>
+    <JoinGame OnJoinedGame="OnJoinGame" GameId="gameId"></JoinGame>
 }
 else
 {
     <h1>Game Code: @_gameState.PinCode</h1>
+    if (CurrentGameId != Guid.Empty)
+    {
+        <p>Game link: <mark>@_gameUrl</mark></p>
+    }
+
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
-    if (_gameState.Hands.Any())
+    if (_gameState.IsComplete)
+    {
+        <div class="text-center">
+            <p>Game is complete!</p>
+            <button type="button" @onclick="OnNewGame" class="mt-5 btn btn-primary">Play Again</button>
+        </div>
+    }
+    else if (_gameState.Hands.Any())
     {
         <h3>Players</h3>
         <table class="table table-sm">

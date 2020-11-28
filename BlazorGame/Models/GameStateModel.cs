@@ -6,7 +6,7 @@ namespace BlazorGame.Models
 {
     public enum GameRole { Creator = 1, Player = 2 };
     
-    public record GameStateModel(Guid GameSessionId, bool HasDealtCards, string? ActivePlayerId, int PinCode, List<CardHand> Hands)
+    public record GameStateModel(Guid GameSessionId, bool HasDealtCards, bool IsComplete, string? ActivePlayerId, int PinCode, List<CardHand> Hands)
     {
         public PlayedCard? UpCard { get; init; }
         public PlayedCard? MatchingCard { get; init; }

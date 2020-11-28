@@ -49,10 +49,12 @@ namespace BlazorGame.Data
             _cards = BuildDeck();
         }
 
-        public string GetPlayerName(string userId)
+        public bool IsComplete
         {
-            var player = Players.FirstOrDefault(x => x.UserId == userId);
-            return player is null ? "" : player.Name;
+            get
+            {
+                return HasDealtCards && Players.All(x => !x.Hand.Any());
+            }
         }
 
         public string ActivePlayerId
@@ -113,20 +115,6 @@ namespace BlazorGame.Data
             _currentTurnIndex++;
         }
 
-        public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId, x.Name)
-        {
-            Cards = x.Hand
-        }).ToList();
-
-
-        public List<CardHand> GetHandByPlayer(string userId)
-        {
-            return Players.Where(x => x.UserId == userId).Select(x => new CardHand(x.UserId, x.Name)
-            {
-                Cards = x.Hand
-            }).ToList();
-        }
-
         private List<Card> BuildDeck()
         {
             var list = new List<Card>();
@@ -165,6 +153,14 @@ namespace BlazorGame.Data
             _currentTurnIndex = 0;
         }
 
+        public Game Reset()
+        {
+            Upcard = null;
+            MatchingCard = null;
+            _currentTurnIndex = -1;
+            return this;
+        }
+
 
         public Game AddPlayer(Player player)
         {
@@ -199,6 +195,17 @@ namespace BlazorGame.Data
             _players.Remove(player);
 
             return player;
+        }
+
+        public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId, x.Name)
+        {
+            Cards = x.Hand
+        }).ToList();
+
+        public string GetPlayerName(string userId)
+        {
+            var player = Players.FirstOrDefault(x => x.UserId == userId);
+            return player is null ? "" : player.Name;
         }
     }
 

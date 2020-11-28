@@ -17,9 +17,9 @@ namespace BlazorGame.Data
 
         public GameSessionService(IHubContext<GameHub> hubContext) => _hubContext = hubContext;
 
-        public Task<bool> CanDeal(int pinCode)
+        public Task<bool> CanDeal(Guid gameId, int pinCode)
         {
-            if (!TryGetGame(pinCode, out var game))
+            if (!TryGetGame(gameId, pinCode, out var game))
             {
                 return Task.FromResult(false);
             }
@@ -27,21 +27,11 @@ namespace BlazorGame.Data
             return Task.FromResult(!game.HasDealtCards);
         }
 
-        public async Task<List<Player>> GetPlayers(int pinCode)
-        {
-            if (!TryGetGame(pinCode, out var game))
-            {
-                return new();
-            }
-
-            return await Task.FromResult(game!.Players);
-        }
-
         public async Task<GameStateModel> CreateGame(string userId, string userName, int pinCode)
         {
             var player = new Player(userId, userName);
             var game = new Game(pinCode, player);
-            var gameState = new GameStateModel(game!.Id, game.HasDealtCards, game.ActivePlayerId, game.PinCode, game.Hands);
+            var gameState = new GameStateModel(game!.Id, game.HasDealtCards, game.IsComplete, game.ActivePlayerId, game.PinCode, game.Hands);
 
             _currentGames[game.Id] = game;
 
@@ -52,10 +42,10 @@ namespace BlazorGame.Data
             return gameState;
         }
 
-        internal async Task<bool> TryPlayCard(string userId, Card card, int pinCode)
+        internal async Task<bool> TryPlayCard(string userId, Card card, Guid gameId, int pinCode)
         {
             var result = false;
-            if (!TryGetGame(pinCode, out var game))
+            if (!TryGetGame(gameId, pinCode, out var game))
             {
                 return result;
             }
@@ -71,9 +61,22 @@ namespace BlazorGame.Data
             return result;
         }
 
-        internal async Task NextTurn(string userId, int pinCode)
+        internal async Task NewGame(string userId, Guid gameId, int pinCode)
         {
-            if (TryGetGame(pinCode, out var game))
+            if (TryGetGame(gameId, pinCode, out var game))
+            {
+                game!.Reset().DealCards();
+
+                var gameState = CurrentState(game);
+
+                await _hubContext.Clients.Group(game.Id.ToString())
+                        .SendAsync("GameStateChanged", gameState);
+            }
+        }
+
+        internal async Task NextTurn(string userId, Guid gameId, int pinCode)
+        {
+            if (TryGetGame(gameId, pinCode, out var game))
             {
                 game!.NextTurn();
                 var gameState = CurrentState(game);
@@ -84,9 +87,9 @@ namespace BlazorGame.Data
             }
         }
 
-        public async Task<GameStateModel?> JoinGame(string userId, string userName, int pinCode)
+        public async Task<GameStateModel?> JoinGame(string userId, string userName, Guid gameId, int pinCode)
         {
-            if(!TryGetGame(pinCode, out var game)) {
+            if(!TryGetGame(gameId, pinCode, out var game)) {
                 return null;
             }
             
@@ -102,9 +105,9 @@ namespace BlazorGame.Data
             return gameState;
         }
 
-        public async Task LeaveGame(string userId, int pinCode)
+        public async Task LeaveGame(string userId, Guid gameId, int pinCode)
         {
-            if (TryGetGame(pinCode, out var game))
+            if (TryGetGame(gameId, pinCode, out var game))
             {
                 game!.RetirePlayer(userId);
 
@@ -114,9 +117,9 @@ namespace BlazorGame.Data
             }
         }
 
-        public async Task<GameStateModel?> GetCurrentState(int pinCode)
+        public async Task<GameStateModel?> GetCurrentState(Guid gameId, int pinCode)
         {
-            if (!TryGetGame(pinCode, out var game))
+            if (!TryGetGame(gameId, pinCode, out var game))
             {
                 return null;
             }
@@ -124,9 +127,9 @@ namespace BlazorGame.Data
             return await Task.FromResult(CurrentState(game!));
         }
 
-        public async Task DealCards(string userId, int pinCode)
+        public async Task DealCards(string userId, Guid gameId, int pinCode)
         {
-            if (TryGetGame(pinCode, out var game))
+            if (TryGetGame(gameId, pinCode, out var game))
             {
                 game!.DealCards();
                 var gameState = CurrentState(game);
@@ -138,7 +141,7 @@ namespace BlazorGame.Data
 
         private static GameStateModel CurrentState(Game game)
         {
-            return new GameStateModel(game.Id, game.HasDealtCards, game.ActivePlayerId, game.PinCode, game.Hands)
+            return new GameStateModel(game.Id, game.HasDealtCards, game.IsComplete, game.ActivePlayerId, game.PinCode, game.Hands)
             {
                 UpCard = new(game.Upcard, game.GetPlayerName(game.ActivePlayerId)),
                 MatchingCard = new(game.MatchingCard, game.GetPlayerName(game.MatchingPlayerId))
@@ -146,10 +149,10 @@ namespace BlazorGame.Data
         }
 
         // Crude implementation assumes unique PINCode
-        private bool TryGetGame(int pinCode, out Game? game)
+        private bool TryGetGame(Guid gameId, int pinCode, out Game? game)
         {
             game = null;
-            var item = _currentGames.FirstOrDefault(x => x.Value.PinCode == pinCode && x.Value.State == GameStatus.Open);
+            var item = _currentGames.FirstOrDefault(x => x.Value.Id == gameId && x.Value.PinCode == pinCode && x.Value.State == GameStatus.Open);
             if (item.Key != Guid.Empty)
             {
                 game = item.Value;

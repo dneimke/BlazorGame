@@ -1,18 +1,8 @@
-﻿
+﻿<h3>@FormTitle</h3>
+
 <EditForm Model="@model" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
-    <div class="form-group">
-        <label for="username" class="font-weight-bold mr-2">Game Mode</label>
-        <small id="mode-help" class="form-text text-muted">Start a new game or join an existing one.</small>
-        <InputRadioGroup Name="gameMode" @bind-Value="model.Mode" class="form-control">
-            <InputRadio Name="gameMode" Value="JoinMode.CreateNew" class="mr-2" />Create New
-            <InputRadio Name="gameMode" Value="JoinMode.JoinExisting" class="mx-2" />Join Existing<br>
-        </InputRadioGroup>
-    </div>
-
-    <hr />
 
     <div class="form-row align-items-center">
         <div class="col-auto">
@@ -32,10 +22,20 @@
 </EditForm>
 
 @code {
-    public JoinGameModel model { get; set; } = new ();
+    public JoinGameModel model { get; set; } = new();
+
+    [Parameter]
+    public Guid? GameId { get; set; }
 
     [Parameter]
     public EventCallback<JoinGameModel> OnJoinedGame { get; set; }
+
+    private string FormTitle => model.Mode == JoinMode.CreateNew ? "Create a new game" : "Join an existing game";
+
+    protected override void OnParametersSet()
+    {
+        model.Mode = GameId.HasValue ? JoinMode.JoinExisting : JoinMode.CreateNew;
+    }
 
     private async Task OnSubmit()
     {
