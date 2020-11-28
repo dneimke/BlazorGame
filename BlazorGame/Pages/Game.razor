@@ -3,76 +3,43 @@
 @implements IDisposable
 @using BlazorGame.Components
 
-@if (_gameState == null)
+@if (ShowEntryScreen)
 {
     <JoinGame OnJoinedGame="OnJoinGame" GameId="gameId"></JoinGame>
 }
 else
 {
-    <h1>Game Code: @_gameState.PinCode</h1>
-    if (CurrentGameId != Guid.Empty)
-    {
-        <p>Game link: <mark>@_gameUrl</mark></p>
-    }
+    <h3>PIN code: @_gameState.PinCode</h3>
+    <p>This <a href="@GameUrl">game link</a> allows other people to join the game.</p>
 
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
-    <h3 class="text-center">Game info:</h3>
-    <p class="text-info text-center">@_turnMessage</p>
-
     <hr />
+
+    <h4 class="text-info text-center my-3">@TurnMessage</h4>
 
     if (_gameState.HasDealtCards)
     {
-        @if (MyHand != null && MyHand.Cards.Any())
+        @if (ShowHand)
         {
-            <h3 class="text-center">My Hand</h3>
-
             <div class="d-flex justify-content-center mt-5">
-                @foreach (var card in MyHand.Cards)
+                @foreach (var card in MyHand!.Cards)
                 {
                     <PlayingCard Value="@card" OnCardClicked="OnCardClicked"></PlayingCard>
                 }
             </div>
         }
 
-
         <div class="d-flex justify-content-center mt-5">
-            @if (_gameState.UpCard?.Card is not null && !string.IsNullOrEmpty(_gameState.UpCard.Player))
-            {
-                <div class="card text-center mr-3" style="width: 18rem;">
-                    <div class="card-body">
-                        <PlayingCard Value="@_gameState.UpCard.Card"></PlayingCard>
-                    </div>
-                    <div class="card-footer text-muted">
-                        <em>Played by @_gameState.UpCard.Player</em>
-                    </div>
-                </div>
-            }
-
-            @if (_gameState.MatchingCard?.Card is not null && !string.IsNullOrEmpty(_gameState.MatchingCard.Player))
-            {
-                <div class="card text-center" style="width: 18rem;">
-                    <div class="card-body">
-                        <PlayingCard Value="@_gameState.MatchingCard.Card"></PlayingCard>
-                    </div>
-                    <div class="card-footer text-muted">
-                        @if (!string.IsNullOrEmpty(_gameState.MatchingCard?.Player))
-                        {
-                            <em>Played by @_gameState.MatchingCard?.Player</em>
-                        }
-                    </div>
-                </div>
-            }
+            <PlayedCards Game="_gameState"></PlayedCards>
         </div>
 
         if (CanPlayAgain)
         {
             <div class="text-center">
-                <p>Game is complete!</p>
                 <button type="button" @onclick="OnNewGame" class="mt-5 btn btn-primary">Play Again</button>
             </div>
-        } 
+        }
         else if (CanMoveNext)
         {
             <div class="text-center">
@@ -80,8 +47,10 @@ else
             </div>
         }
     }
-    else if (CanDealCards)
+    else if (CanDealCards)  
     {
-        <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
+        <div class="text-center">
+            <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
+        </div>
     }
 }

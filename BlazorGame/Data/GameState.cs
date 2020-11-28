@@ -5,14 +5,6 @@ using System.Linq;
 
 namespace BlazorGame.Data
 {
-    static class Animals
-    {
-        public const string Tiger = nameof(Tiger);
-        public const string Panda = nameof(Panda);
-        public const string Monkey = nameof(Monkey);
-        public const string Spider = nameof(Spider);
-    }
-
     public enum GameStatus
     {
         None,
@@ -22,10 +14,6 @@ namespace BlazorGame.Data
 
     public class Game
     {
-        List<string> _animals = new() { Animals.Monkey, Animals.Panda, Animals.Spider, Animals.Tiger };
-        List<string> _colors = new() { "primary", "secondary", "danger", "warning" };
-        List<string> _suits = new() { "monkey", "panda", "spider", "tiger" };
-
         List<Player> _players = new();
         List<Card> _cards = new();
         private int _currentTurnIndex = -1;
@@ -42,7 +30,7 @@ namespace BlazorGame.Data
         public string GameCreatorName { get; init; }
 
 
-        public Game(int pinCode, Player creator)
+        public Game(int pinCode, Player creator, ICardProvider cardProvider)
         {
             Id = Guid.NewGuid();
             PinCode = pinCode;
@@ -50,7 +38,7 @@ namespace BlazorGame.Data
             GameCreatorId = creator.UserId;
             GameCreatorName = creator.Name;
             State = GameStatus.Open;
-            _cards = BuildDeck();
+            _cards = cardProvider.Cards();
         }
 
         public bool IsComplete
@@ -119,16 +107,7 @@ namespace BlazorGame.Data
             _currentTurnIndex++;
         }
 
-        private List<Card> BuildDeck()
-        {
-            var list = new List<Card>();
-            for(var i = 0; i < _animals.Count; i++)
-            {
-                list.Add(new(_animals[i], _colors[i], _suits[i]));
-                list.Add(new(_animals[i], _colors[i], _suits[i]));
-            }
-            return list;
-        }
+        
 
         public void DealCards()
         {

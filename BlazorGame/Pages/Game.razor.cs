@@ -22,7 +22,7 @@ namespace BlazorGame.Pages
         public string Username { get; set; } = "";
         private Guid CurrentGameId { get; set; }
 
-        string _gameUrl => string.Format($"{NavManager.BaseUri}?gameId={CurrentGameId}");
+        string GameUrl => string.Format($"{NavManager.BaseUri}?gameId={CurrentGameId}");
         CardHand? MyHand => _gameState?.Hands.Where(x => x.UserId == UserId).FirstOrDefault();
 
         bool CanDealCards => _gameState.HasDealtCards ? false :
@@ -32,8 +32,10 @@ namespace BlazorGame.Pages
 
         bool CanPlayAgain => _gameState.IsComplete && _gameState?.GameCreatorId == UserId;
         bool CanMoveNext => _gameState.CanPlayNextCard && _gameState?.GameCreatorId == UserId;
+        bool ShowEntryScreen => _gameState == null;
+        bool ShowHand => MyHand != null && MyHand.Cards.Any();
 
-        string _turnMessage
+        string TurnMessage
         {
             get
             {
@@ -122,7 +124,7 @@ namespace BlazorGame.Pages
         {
             if (_gameState is not null)
             {
-                await _gameService.NewGame(UserId, CurrentGameId, _gameState.PinCode);
+                await _gameService.RestartGame(UserId, CurrentGameId, _gameState.PinCode);
             }
         }
 

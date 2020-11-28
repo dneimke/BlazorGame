@@ -1,0 +1,32 @@
+﻿@if (Game.UpCard?.Card is not null && !string.IsNullOrEmpty(Game.UpCard.Player))
+{
+    <div class="card text-center mr-3" style="width: 18rem;">
+        <div class="card-body">
+            <PlayingCard Value="@Game.UpCard.Card"></PlayingCard>
+        </div>
+        <div class="card-footer text-muted">
+            <em>Played by @Game.UpCard.Player</em>
+        </div>
+    </div>
+}
+
+@if (Game.MatchingCard?.Card is not null && !string.IsNullOrEmpty(Game.MatchingCard.Player))
+{
+    <div class="card text-center" style="width: 18rem;">
+        <div class="card-body">
+            <PlayingCard Value="@Game.MatchingCard.Card"></PlayingCard>
+        </div>
+        <div class="card-footer text-muted">
+            @if (!string.IsNullOrEmpty(Game.MatchingCard?.Player))
+            {
+                <em>Played by @Game.MatchingCard?.Player</em>
+            }
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public GameStateModel Game { get; set; }
+}

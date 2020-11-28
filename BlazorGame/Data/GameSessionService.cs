@@ -11,26 +11,21 @@ namespace BlazorGame.Data
     public class GameSessionService
     {
         private readonly IHubContext<GameHub> _hubContext;
-        
+        private readonly ICardProvider _cardProvider;
+
         // adding by PIN Code for now
         private Dictionary<Guid, Game> _currentGames = new();
 
-        public GameSessionService(IHubContext<GameHub> hubContext) => _hubContext = hubContext;
-
-        public Task<bool> CanDeal(Guid gameId, int pinCode)
+        public GameSessionService(IHubContext<GameHub> hubContext, ICardProvider cardProvider)
         {
-            if (!TryGetGame(gameId, pinCode, out var game))
-            {
-                return Task.FromResult(false);
-            }
-
-            return Task.FromResult(!game.HasDealtCards);
+            _hubContext = hubContext;
+            _cardProvider = cardProvider;
         }
 
         public async Task<GameStateModel> CreateGame(string userId, string userName, int pinCode)
         {
             var player = new Player(userId, userName);
-            var game = new Game(pinCode, player);
+            var game = new Game(pinCode, player, _cardProvider);
             var gameState = new GameStateModel(game);
 
             _currentGames[game.Id] = game;
@@ -42,26 +37,7 @@ namespace BlazorGame.Data
             return gameState;
         }
 
-        internal async Task<bool> TryPlayCard(string userId, Card card, Guid gameId, int pinCode)
-        {
-            var result = false;
-            if (!TryGetGame(gameId, pinCode, out var game))
-            {
-                return result;
-            }
-
-            if(game!.TryPlayCard(userId, card))
-            {
-                var gameState = CurrentState(game);
-
-                await _hubContext.Clients.Group(game.Id.ToString())
-                    .SendAsync("GameStateChanged", gameState);
-            }
-
-            return result;
-        }
-
-        internal async Task NewGame(string userId, Guid gameId, int pinCode)
+        internal async Task RestartGame(string userId, Guid gameId, int pinCode)
         {
             if (TryGetGame(gameId, pinCode, out var game))
             {
@@ -83,26 +59,25 @@ namespace BlazorGame.Data
 
                 await _hubContext.Clients.Group(game.Id.ToString())
                     .SendAsync("GameStateChanged", gameState);
-
             }
         }
 
         public async Task<GameStateModel?> JoinGame(string userId, string userName, Guid gameId, int pinCode)
         {
-            if(!TryGetGame(gameId, pinCode, out var game)) {
-                return null;
+            if(TryGetGame(gameId, pinCode, out var game)) {
+                var player = new Player(userId, userName);
+                player.Join(game!);
+
+                var gameState = CurrentState(game!);
+
+                await _hubContext.Groups.AddToGroupAsync(userId, game!.Id.ToString());
+                await _hubContext.Clients.Group(game.Id.ToString())
+                    .SendAsync("PlayerJoined", gameState);
+
+                return gameState;
             }
-            
-            var player = new Player(userId, userName);
-            player.Join(game!);
 
-            var gameState = CurrentState(game!);
-
-            await _hubContext.Groups.AddToGroupAsync(userId, game!.Id.ToString());
-            await _hubContext.Clients.Group(game.Id.ToString())
-                .SendAsync("PlayerJoined", gameState);
-
-            return gameState;
+            return null;
         }
 
         public async Task LeaveGame(string userId, Guid gameId, int pinCode)
@@ -148,7 +123,26 @@ namespace BlazorGame.Data
             };
         }
 
-        // Crude implementation assumes unique PINCode
+        internal async Task<bool> TryPlayCard(string userId, Card card, Guid gameId, int pinCode)
+        {
+            var result = false;
+            if (!TryGetGame(gameId, pinCode, out var game))
+            {
+                return result;
+            }
+
+            if (game!.TryPlayCard(userId, card))
+            {
+                var gameState = CurrentState(game);
+
+                await _hubContext.Clients.Group(game.Id.ToString())
+                    .SendAsync("GameStateChanged", gameState);
+            }
+
+            return result;
+        }
+        
+
         private bool TryGetGame(Guid gameId, int pinCode, out Game? game)
         {
             game = null;
