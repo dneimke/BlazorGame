@@ -26,7 +26,7 @@ namespace BlazorGame.Data
         List<string> _colors = new() { "primary", "secondary", "danger", "warning" };
         List<string> _suits = new() { "monkey", "panda", "spider", "tiger" };
 
-        List <Player> _players = new();
+        List<Player> _players = new();
         List<Card> _cards = new();
         private int _currentTurnIndex = -1;
 
@@ -35,6 +35,9 @@ namespace BlazorGame.Data
         public bool HasDealtCards => _currentTurnIndex >= 0;
         public GameStatus State { get; private set; } = GameStatus.None;
         public List<Player> Players { get => _players; }
+        public Card? Upcard { get; private set; }
+        public string MatchingPlayerId { get; private set; } = "";
+        public Card? MatchingCard { get; private set; }
 
 
         public Game(int pinCode, Player creator)
@@ -46,14 +49,22 @@ namespace BlazorGame.Data
             _cards = BuildDeck();
         }
 
-        public Player? CurrentTurn 
-        { 
+        public string GetPlayerName(string userId)
+        {
+            var player = Players.FirstOrDefault(x => x.UserId == userId);
+            return player is null ? "" : player.Name;
+        }
+
+        public string ActivePlayerId
+        {
             get
             {
                 if (_currentTurnIndex < 0)
-                    return null;
+                    return "";
 
-                return _players.Skip(_currentTurnIndex).Take(1).First();
+                _currentTurnIndex %= _players.Count;
+
+                return _players.Skip(_currentTurnIndex).Take(1).First().UserId;
             }
         }
 
@@ -64,6 +75,42 @@ namespace BlazorGame.Data
 
             if (++_currentTurnIndex == _players.Count)
                 _currentTurnIndex = 0;
+        }
+
+        internal bool TryPlayCard(string userId, Card card)
+        {
+            if (string.IsNullOrEmpty(ActivePlayerId))
+                throw new InvalidOperationException("Cards have not been dealt.");
+
+            var player = Players.Single(x => x.UserId == userId);
+
+            if (ActivePlayerId == userId && Upcard is null)
+            {
+                Upcard = card;
+            } else if (ActivePlayerId != userId && Upcard is not null && Upcard.Name == card.Name)
+            {
+                MatchingPlayerId = userId;
+                MatchingCard = card;
+            }
+            else
+            {
+                return false;
+            }
+
+            player.Hand.Remove(card);
+            return true;
+        }
+
+        internal void NextTurn()
+        {
+            if (Upcard is null || MatchingCard is null)
+            {
+                return;
+            }
+
+            Upcard = null;
+            MatchingCard = null;
+            _currentTurnIndex++;
         }
 
         public List<CardHand> Hands => Players.Select(x => new CardHand(x.UserId, x.Name)

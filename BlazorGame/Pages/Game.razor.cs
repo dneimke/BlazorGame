@@ -3,7 +3,6 @@ using BlazorGame.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BlazorGame.Pages
@@ -42,11 +41,29 @@ namespace BlazorGame.Pages
             StateHasChanged();
         }
 
+        private async Task OnCardClicked(Card card)
+        {
+            if (await _gameService.TryPlayCard(UserId, card, _gameState!.PinCode)) {
+                await JS.InvokeVoidAsync("console.info", $"User played {card.Name}");
+            } else
+            {
+                await JS.InvokeVoidAsync("console.warn", $"Cannot play {card.Name}");
+            }
+        }
+
         private async Task OnDealCards()
         {
             if (_gameState is not null)
             {
                 await _gameService.DealCards(UserId, _gameState.PinCode);
+            }
+        }
+
+        private async Task OnPlayNext()
+        {
+            if (_gameState is not null)
+            {
+                await _gameService.NextTurn(UserId, _gameState.PinCode);
             }
         }
 

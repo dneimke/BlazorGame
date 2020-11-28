@@ -57,13 +57,11 @@ strong .p-card {
     text-align: center;
     white-space: pre;
     line-height: .9;
-    font-size: 1.3em;
+    font-size: 1.7rem;
     word-spacing: -.15em;
-    
     position: absolute;
-    content: "\2766";
-    top: 2.4em;
-    left: .6em;
+    top: 80px;
+    left: 25px;
 }
 
 .p-card.monkey .suit:after {

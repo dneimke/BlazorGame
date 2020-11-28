@@ -28,7 +28,7 @@ else
                     <tr class="row">
                         <td class="col-sm-4">
 
-                            @if (hand.UserId == _gameState.CurrentPlayerId)
+                            @if (hand.UserId == _gameState.ActivePlayerId)
                             {
                                 <strong>@hand.Name</strong> <small class="font-italic">(playing)</small>
                             }
@@ -41,7 +41,10 @@ else
                             <ul class="list-inline" id="hand_@hand.UserId">
                                 @foreach (var card in hand.Cards)
                                 {
-                                    <PlayingCard Value="@card"></PlayingCard>
+                                    <li class="list-inline-item">
+                                        <PlayingCard Value="@card" OnCardClicked="OnCardClicked"></PlayingCard>
+                                    </li>
+
                                 }
                             </ul>
                         </td>
@@ -54,5 +57,44 @@ else
         {
             <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
         }
+
+        <div class="d-flex justify-content-center mt-5">
+            @if (_gameState.UpCard?.Card is not null && !string.IsNullOrEmpty(_gameState.UpCard.Player))
+            {
+                <div class="card text-center" style="width: 18rem;">
+                    <div class="card-body">
+                        <PlayingCard Value="@_gameState.UpCard.Card"></PlayingCard>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <em>Played by @_gameState.UpCard.Player</em>
+                    </div>
+                </div>
+            }
+
+            @if (_gameState.MatchingCard?.Card is not null && !string.IsNullOrEmpty(_gameState.MatchingCard.Player))
+            {
+                <div class="card text-center" style="width: 18rem;">
+                    <div class="card-body">
+                        <PlayingCard Value="@_gameState.MatchingCard.Card"></PlayingCard>
+                    </div>
+                    <div class="card-footer text-muted">
+                        @if (!string.IsNullOrEmpty(_gameState.MatchingCard?.Player))
+                        {
+                            <em>Played by @_gameState.MatchingCard?.Player</em>
+                        }
+                    </div>
+                </div>
+            }
+
+
+        </div>
+
+        if (_gameState.CanPlayNextCard)
+        {
+            <div class="text-center">
+                <button type="button" @onclick="OnPlayNext" class="mt-5 btn btn-info">Play Next Card</button>
+            </div>
+        }
+
     }
 }

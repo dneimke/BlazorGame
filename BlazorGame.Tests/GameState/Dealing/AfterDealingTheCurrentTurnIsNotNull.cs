@@ -21,7 +21,7 @@ namespace BlazorGame.Tests.Dealing
 
         public void ThenTheCurrentTurnIsNotNull()
         {
-            _game.CurrentTurn.ShouldBe(_player);
+            _game.ActivePlayerId.ShouldBe(_player.UserId);
         }
     }
 }
