@@ -31,7 +31,7 @@ namespace BlazorGame.Data
         {
             var player = new Player(userId, userName);
             var game = new Game(pinCode, player);
-            var gameState = new GameStateModel(game!.Id, game.HasDealtCards, game.IsComplete, game.ActivePlayerId, game.PinCode, game.Hands);
+            var gameState = new GameStateModel(game);
 
             _currentGames[game.Id] = game;
 
@@ -141,7 +141,7 @@ namespace BlazorGame.Data
 
         private static GameStateModel CurrentState(Game game)
         {
-            return new GameStateModel(game.Id, game.HasDealtCards, game.IsComplete, game.ActivePlayerId, game.PinCode, game.Hands)
+            return new GameStateModel(game)
             {
                 UpCard = new(game.Upcard, game.GetPlayerName(game.ActivePlayerId)),
                 MatchingCard = new(game.MatchingCard, game.GetPlayerName(game.MatchingPlayerId))

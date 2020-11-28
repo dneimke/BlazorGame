@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.JSInterop;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BlazorGame.Pages
@@ -22,6 +23,47 @@ namespace BlazorGame.Pages
         private Guid CurrentGameId { get; set; }
 
         string _gameUrl => string.Format($"{NavManager.BaseUri}?gameId={CurrentGameId}");
+        CardHand? MyHand => _gameState?.Hands.Where(x => x.UserId == UserId).FirstOrDefault();
+
+        bool CanDealCards => _gameState.HasDealtCards ? false :
+            _gameState?.GameCreatorId == UserId ? 
+                _gameState.Hands.Count > 1 ? true : false
+                    : false;
+
+        bool CanPlayAgain => _gameState.IsComplete && _gameState?.GameCreatorId == UserId;
+        bool CanMoveNext => _gameState.CanPlayNextCard && _gameState?.GameCreatorId == UserId;
+
+        string _turnMessage
+        {
+            get
+            {
+                if ((bool)(_gameState?.HasDealtCards))
+                {
+                    if (_gameState.UpCard?.Card is null)
+                    {
+                        return _gameState.ActivePlayerId == UserId ? "It's your turn to lead with a card" :
+                            $"Waiting for {_gameState.UpCard.Player} to lead with a card";
+                    }
+                    else if(_gameState.MatchingCard?.Card is null)
+                    {
+                        return _gameState.ActivePlayerId == UserId ? "Waiting for the player with the matching card" :
+                            "Can you play a matching card from your hand?";
+                    }
+                    else
+                    {
+                        return _gameState.IsComplete ? "Game is complete" : "Cards are matched.";
+                    }
+                }
+                else if(CanDealCards)
+                {
+                    return _gameState?.GameCreatorId == UserId ? "Deal the cards to begin the game"
+                        : $"Waiting for {_gameState.GameCreatorName} to deal the cards";
+                } else
+                {
+                    return "Waiting for the game to start.";
+                }
+            }
+        }
 
         Lazy<DotNetObjectReference<Game>> _serverReference
         {
@@ -42,7 +84,10 @@ namespace BlazorGame.Pages
                 _ => await _gameService.JoinGame(UserId, Username, gameId.GetValueOrDefault(), joinGameModel.PINCode)
             };
 
-            CurrentGameId = _gameState.GameSessionId;
+            if(_gameState != null)
+            {
+                CurrentGameId = _gameState.GameSessionId;
+            }
 
             StateHasChanged();
         }

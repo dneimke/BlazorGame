@@ -38,6 +38,8 @@ namespace BlazorGame.Data
         public Card? Upcard { get; private set; }
         public string MatchingPlayerId { get; private set; } = "";
         public Card? MatchingCard { get; private set; }
+        public string GameCreatorId { get; init; }
+        public string GameCreatorName { get; init; }
 
 
         public Game(int pinCode, Player creator)
@@ -45,6 +47,8 @@ namespace BlazorGame.Data
             Id = Guid.NewGuid();
             PinCode = pinCode;
             _players.Add(creator);
+            GameCreatorId = creator.UserId;
+            GameCreatorName = creator.Name;
             State = GameStatus.Open;
             _cards = BuildDeck();
         }

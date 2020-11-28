@@ -1,6 +1,5 @@
 ﻿@page "/"
 
-
 @implements IDisposable
 @using BlazorGame.Components
 
@@ -18,63 +17,30 @@ else
 
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
-    if (_gameState.IsComplete)
+    <h3 class="text-center">Game info:</h3>
+    <p class="text-info text-center">@_turnMessage</p>
+
+    <hr />
+
+    if (_gameState.HasDealtCards)
     {
-        <div class="text-center">
-            <p>Game is complete!</p>
-            <button type="button" @onclick="OnNewGame" class="mt-5 btn btn-primary">Play Again</button>
-        </div>
-    }
-    else if (_gameState.Hands.Any())
-    {
-        <h3>Players</h3>
-        <table class="table table-sm">
-            <thead>
-                <tr class="row">
-                    <th scope="col" class="col-sm-4">Player</th>
-                    <th scope="col" class="col-sm-8">Hand</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var hand in _gameState.Hands)
-                {
-                    <tr class="row">
-                        <td class="col-sm-4">
-
-                            @if (hand.UserId == _gameState.ActivePlayerId)
-                            {
-                                <strong>@hand.Name</strong> <small class="font-italic">(playing)</small>
-                            }
-                            else
-                            {
-                                @hand.Name
-                            }
-                        </td>
-                        <td class="col-sm-8">
-                            <ul class="list-inline" id="hand_@hand.UserId">
-                                @foreach (var card in hand.Cards)
-                                {
-                                    <li class="list-inline-item">
-                                        <PlayingCard Value="@card" OnCardClicked="OnCardClicked"></PlayingCard>
-                                    </li>
-
-                                }
-                            </ul>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        if (!_gameState.HasDealtCards)
+        @if (MyHand != null && MyHand.Cards.Any())
         {
-            <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
+            <h3 class="text-center">My Hand</h3>
+
+            <div class="d-flex justify-content-center mt-5">
+                @foreach (var card in MyHand.Cards)
+                {
+                    <PlayingCard Value="@card" OnCardClicked="OnCardClicked"></PlayingCard>
+                }
+            </div>
         }
+
 
         <div class="d-flex justify-content-center mt-5">
             @if (_gameState.UpCard?.Card is not null && !string.IsNullOrEmpty(_gameState.UpCard.Player))
             {
-                <div class="card text-center" style="width: 18rem;">
+                <div class="card text-center mr-3" style="width: 18rem;">
                     <div class="card-body">
                         <PlayingCard Value="@_gameState.UpCard.Card"></PlayingCard>
                     </div>
@@ -98,16 +64,24 @@ else
                     </div>
                 </div>
             }
-
-
         </div>
 
-        if (_gameState.CanPlayNextCard)
+        if (CanPlayAgain)
         {
             <div class="text-center">
-                <button type="button" @onclick="OnPlayNext" class="mt-5 btn btn-info">Play Next Card</button>
+                <p>Game is complete!</p>
+                <button type="button" @onclick="OnNewGame" class="mt-5 btn btn-primary">Play Again</button>
+            </div>
+        } 
+        else if (CanMoveNext)
+        {
+            <div class="text-center">
+                <button type="button" @onclick="OnPlayNext" class="mt-5 btn btn-info">Next Turn</button>
             </div>
         }
-
+    }
+    else if (CanDealCards)
+    {
+        <button type="button" @onclick="OnDealCards" class="mt-5 btn btn-info">Deal</button>
     }
 }

@@ -1,5 +1,7 @@
 ﻿<h3>@FormTitle</h3>
 
+<p class="text-muted">@FormHelpText</p>
+
 <EditForm Model="@model" OnValidSubmit="@OnSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
@@ -31,6 +33,8 @@
     public EventCallback<JoinGameModel> OnJoinedGame { get; set; }
 
     private string FormTitle => model.Mode == JoinMode.CreateNew ? "Create a new game" : "Join an existing game";
+    private string FormHelpText => model.Mode == JoinMode.CreateNew ? "Once created, a link will be provided that you can give to users to allow them to join." 
+        : "Enter the Pin code that you were provided to enter the game.";
 
     protected override void OnParametersSet()
     {
