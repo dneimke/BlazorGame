@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 
 namespace BlazorGame.Data
@@ -10,26 +10,18 @@ namespace BlazorGame.Data
 
     public class CardProvider : ICardProvider
     {
-        List<string> _animals = new() { "Monkey", "Panda", "Spider", "Tiger" };
-        List<string> _colors = new() { "primary", "secondary", "danger", "warning" };
-        List<string> _suits = new() { "monkey", "panda", "spider", "tiger" };
+        private readonly List<Card> _cards;
+
+        public CardProvider(IConfiguration configuration)
+        {
+            List<Card> cards = new();
+            configuration.GetSection("Cards").Bind(cards);
+            _cards = cards;
+        }
 
         public List<Card> Cards()
         {
             return _cards;
-        }
-
-        List<Card> _cards
-        {
-            get {
-                var list = new List<Card>();
-                for (var i = 0; i < _animals.Count; i++)
-                {
-                    list.Add(new(_animals[i], _colors[i], _suits[i]));
-                    list.Add(new(_animals[i], _colors[i], _suits[i]));
-                }
-                return list;
-            }
         }
     }
 }

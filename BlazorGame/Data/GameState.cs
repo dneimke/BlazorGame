@@ -192,7 +192,12 @@ namespace BlazorGame.Data
         }
     }
 
-    public record Card(string Name, string Color, string Icon);
+    public class Card
+    {
+        public string Name { get; set; }
+            public string Color { get; set; }
+        public string Suit { get; set; }
+    }
 
     public class Player
     {

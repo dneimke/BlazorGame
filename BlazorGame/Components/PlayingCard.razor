@@ -2,7 +2,7 @@
 
 @if (Value is not null)
 {
-    <a class="p-card rank-@Value.Name @Value.Icon" @onclick="OnCardClick" href="#">
+    <a class="p-card rank-@Value.Name @Value.Suit" @onclick="OnCardClick" href="#">
         <span class="rank">@Value.Name</span>
         <span class="suit"></span>
     </a>
