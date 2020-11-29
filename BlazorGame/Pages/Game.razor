@@ -9,8 +9,10 @@
 }
 else
 {
-    <h3>PIN code: @_gameState.PinCode</h3>
-    <p>This <a href="@GameUrl">game link</a> allows other people to join the game.</p>
+    <div class="alert alert-info">
+        <h3>PIN code: @_gameState.PinCode</h3>
+        <p>This <a href="@GameUrl">game link</a> allows other people to join the game.</p>
+    </div>
 
     <button type="button" class="btn btn-warning mb-2" @onclick="OnLeaveGame">Leave Game</button>
 
