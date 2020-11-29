@@ -1,4 +1,5 @@
 using BlazorGame.Data;
+using BlazorGame.Tests.Helpers;
 using Shouldly;
 
 namespace BlazorGame.Tests.Dealing
@@ -8,10 +9,15 @@ namespace BlazorGame.Tests.Dealing
         Game _game;
         Player _player;
 
+        public CurrentTurnIsNullWhenNoPlayers(ContainerFixture fixture) : base(fixture)
+        {
+
+        }
+
         public void GivenANewGame()
         {
             _player = new Player("Darren", "Darren");
-            _game = new(1000, _player);
+            _game = new(1000, _player, _fixture.GetService<ICardProvider>());
         }
 
         public void WhenTheLastPlayerLeaves()

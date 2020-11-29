@@ -195,7 +195,7 @@ namespace BlazorGame.Data
     public class Card
     {
         public string Name { get; set; }
-            public string Color { get; set; }
+        public string Color { get; set; }
         public string Suit { get; set; }
     }
 

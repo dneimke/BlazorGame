@@ -1,4 +1,5 @@
 using BlazorGame.Data;
+using BlazorGame.Tests.Helpers;
 using Shouldly;
 using System;
 using System.Linq;
@@ -10,9 +11,14 @@ namespace BlazorGame.Tests
         Game _game;
         Player _player;
 
+        public CannotJoinAfterCardsDealt(ContainerFixture fixture) : base(fixture)
+        {
+
+        }
+
         public void GivenANewGameWithPlayers()
         {
-            _game = new(1000, new Player("Darren", "Darren"));
+            _game = new(1000, new Player("Darren", "Darren"), _fixture.GetService<ICardProvider>());
         }
 
         public void WhenTheCardsAreDealt()

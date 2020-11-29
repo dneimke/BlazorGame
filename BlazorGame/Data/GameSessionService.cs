@@ -37,7 +37,7 @@ namespace BlazorGame.Data
             return gameState;
         }
 
-        internal async Task RestartGame(string userId, Guid gameId, int pinCode)
+        public async Task RestartGame(string userId, Guid gameId, int pinCode)
         {
             if (TryGetGame(gameId, pinCode, out var game))
             {
@@ -50,7 +50,7 @@ namespace BlazorGame.Data
             }
         }
 
-        internal async Task NextTurn(string userId, Guid gameId, int pinCode)
+        public async Task NextTurn(string userId, Guid gameId, int pinCode)
         {
             if (TryGetGame(gameId, pinCode, out var game))
             {
@@ -102,7 +102,7 @@ namespace BlazorGame.Data
             return await Task.FromResult(CurrentState(game!));
         }
 
-        public async Task DealCards(string userId, Guid gameId, int pinCode)
+        public async Task<GameStateModel?> DealCards(string userId, Guid gameId, int pinCode)
         {
             if (TryGetGame(gameId, pinCode, out var game))
             {
@@ -111,7 +111,11 @@ namespace BlazorGame.Data
 
                 await _hubContext.Clients.Group(game.Id.ToString())
                     .SendAsync("GameStateChanged", gameState);
-            }            
+
+                return gameState;
+            }
+
+            return null;
         }
 
         private static GameStateModel CurrentState(Game game)
@@ -123,7 +127,7 @@ namespace BlazorGame.Data
             };
         }
 
-        internal async Task<bool> TryPlayCard(string userId, Card card, Guid gameId, int pinCode)
+        public async Task<bool> TryPlayCard(string userId, Card card, Guid gameId, int pinCode)
         {
             var result = false;
             if (!TryGetGame(gameId, pinCode, out var game))
@@ -134,6 +138,7 @@ namespace BlazorGame.Data
             if (game!.TryPlayCard(userId, card))
             {
                 var gameState = CurrentState(game);
+                result = true;
 
                 await _hubContext.Clients.Group(game.Id.ToString())
                     .SendAsync("GameStateChanged", gameState);
