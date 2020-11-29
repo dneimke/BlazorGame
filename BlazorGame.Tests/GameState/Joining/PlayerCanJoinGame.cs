@@ -3,14 +3,14 @@ using BlazorGame.Tests.Helpers;
 using Shouldly;
 using System.Linq;
 
-namespace BlazorGame.Tests
+namespace BlazorGame.Tests.Joining
 {
-    public class PlayerCanLeaveGame : TestBase
+    public class PlayerCanJoinGame : TestBase
     {
         Game _game;
         Player _player;
 
-        public PlayerCanLeaveGame(ContainerFixture fixture) : base(fixture)
+        public PlayerCanJoinGame(ContainerFixture fixture) : base(fixture)
         {
 
         }
@@ -26,15 +26,9 @@ namespace BlazorGame.Tests
             _player.Join(_game);
         }
 
-        public void AndWhenTheyThenLeave()
+        public void ThenTheyShouldBeInTheGame()
         {
-            _game.RetirePlayer(_player.UserId);
-            _player.LeaveGame();
-        }
-
-        public void ThenTheyShouldNotBeInTheGame()
-        {
-            _game.Players.Any(x => x.UserId == _player.UserId).ShouldBeFalse();
+            _game.Players.Any(x => x.UserId == _player.UserId).ShouldBeTrue();
         }
     }
 }

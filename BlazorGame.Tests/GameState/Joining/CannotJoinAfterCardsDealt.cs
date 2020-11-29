@@ -4,7 +4,7 @@ using Shouldly;
 using System;
 using System.Linq;
 
-namespace BlazorGame.Tests
+namespace BlazorGame.Tests.Joining
 {
     public class CannotJoinAfterCardsDealt : TestBase
     {

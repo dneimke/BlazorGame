@@ -3,7 +3,7 @@ using BlazorGame.Tests.Helpers;
 using Shouldly;
 using System;
 
-namespace BlazorGame.Tests
+namespace BlazorGame.Tests.Joining
 {
     public class CannotJoinTwiceByUsername : TestBase
     {

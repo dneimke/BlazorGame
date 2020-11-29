@@ -1,16 +1,16 @@
 using BlazorGame.Data;
 using BlazorGame.Tests.Helpers;
 using Shouldly;
-using System;
+using System.Linq;
 
-namespace BlazorGame.Tests
+namespace BlazorGame.Tests.Joining
 {
-    public class CannotJoinTwice : TestBase
+    public class PlayerCanLeaveGame : TestBase
     {
         Game _game;
         Player _player;
 
-        public CannotJoinTwice(ContainerFixture fixture) : base(fixture)
+        public PlayerCanLeaveGame(ContainerFixture fixture) : base(fixture)
         {
 
         }
@@ -26,10 +26,15 @@ namespace BlazorGame.Tests
             _player.Join(_game);
         }
 
-        public void ThenTheyCannotJoinTwice()
+        public void AndWhenTheyThenLeave()
         {
-            Should.Throw<InvalidOperationException>(() => _player.Join(_game))
-                .Message.ShouldBe("Player has already joined the game");
+            _game.RetirePlayer(_player.UserId);
+            _player.LeaveGame();
+        }
+
+        public void ThenTheyShouldNotBeInTheGame()
+        {
+            _game.Players.Any(x => x.UserId == _player.UserId).ShouldBeFalse();
         }
     }
 }
