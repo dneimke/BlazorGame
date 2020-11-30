@@ -10,7 +10,7 @@
         <div class="col-auto">
             <label for="username" class="font-weight-bold mr-2">Username</label>
             <input type="text" class="form-control" id="username-input" aria-describedby="username-help" @bind-value="model.Username">
-            <small id="username-help" class="form-text text-muted">Enter a short username.</small>
+            <small id="username-help" class="form-text text-muted">Enter a username.</small>
         </div>
         <div class="col-auto">
             <label for="pin-input" class="font-weight-bold mr-2">PIN</label>
@@ -20,7 +20,7 @@
         <div class="col-auto">
             <button type="submit" id="join-button" class="btn btn-primary mb-2">Go!</button>
         </div>
-    </div>
+    </div> 
 </EditForm>
 
 @code {
@@ -33,8 +33,8 @@
     public EventCallback<JoinGameModel> OnJoinedGame { get; set; }
 
     private string FormTitle => model.Mode == JoinMode.CreateNew ? "Create a new game" : "Join an existing game";
-    private string FormHelpText => model.Mode == JoinMode.CreateNew ? "Once created, a link will be provided that you can give to users to allow them to join." 
-        : "Enter the Pin code that you were provided to enter the game.";
+    private string FormHelpText => model.Mode == JoinMode.CreateNew ? "Create a new game and invite others to join using a PIN code." 
+        : "Enter the PIN code you were provided to enter the game."; 
 
     protected override void OnParametersSet()
     {
